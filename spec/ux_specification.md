@@ -274,6 +274,12 @@ color: #f5deb3;
 
 ### Tooltips
 
+#### General Tooltip Behavior
+- **Hover Interaction**: All interactive elements should display tooltips on mouse hover
+- **Timing**: Tooltips appear after 500ms hover delay, disappear immediately on mouse leave
+- **Positioning**: Smart positioning to avoid screen edge clipping
+- **Screen Reader Support**: Use `aria-describedby` for equivalent information instead of visual tooltips
+
 #### Tooltip Styling
 ```css
 background: rgba(45, 24, 16, 0.95);
@@ -284,6 +290,9 @@ border-radius: 4px;
 box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 max-width: 300px;
 font-size: 12px;
+z-index: 1000;
+position: absolute;
+pointer-events: none; /* Prevents tooltip from interfering with mouse events */
 ```
 
 #### Tooltip Content
@@ -291,6 +300,9 @@ font-size: 12px;
 - **Mission**: Full description, Requirements, Detailed rewards/penalties
 - **Status Effect**: Description, Duration, Mechanical effect
 - **Artifact**: Full description, All effects, Rarity
+- **Card**: Complete card text, cost modifications, targeting information
+- **Resource Values**: Current amount, recent changes, limits
+- **Time Controls**: Current speed, pause state, next auto-pause trigger
 
 ## Dialog Systems
 
