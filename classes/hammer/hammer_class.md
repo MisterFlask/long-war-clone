@@ -39,9 +39,9 @@ Rather than the typical "noble protector" archetype, the Hammer embodies the con
 
 ## New Buff Definitions
 
-### Taunt (X)
-**Applies To**: Character
-**Description**: "For the next ${this.stacks} enemy action(s) that would target a single character, redirect the target to this character instead."
+### Taunt (Instant Effect)
+**Applies To**: Instant Effect
+**Description**: "Force target enemy to target you with their next single-target action."
 
 ### Retaliate (X)
 **Applies To**: Character
@@ -65,8 +65,8 @@ The Hammer begins with cards focused on basic protection and minor provocation:
 **Cost**: 0 energy
 **Type**: Skill
 **Rarity**: Token
-**Mechanical Text**: Apply Taunt (1) to yourself. Transient.
-**Flavor Text**: "Sometimes the cruelest cuts come from the sharpest tongues."
+**Mechanical Text**: Force target enemy to target you with their next single-target action. Transient.
+**Flavor Text**: "Sometimes the cruelest cuts come from the sharpest tongues, you f***in' d***head!"
 
 This token represents the Hammer's ability to generate provocative situations through verbal and gestural antagonism, creating tactical opportunities without spending significant resources.
 

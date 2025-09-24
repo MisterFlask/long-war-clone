@@ -57,6 +57,10 @@ For each card, evaluate:
 6. **Thematic Fit**: Does the card fit the cosmic horror theme?
 7. **Uniqueness**: Is this meaningfully different from existing cards?
 8. **Balance**: Will this card create problematic interactions?
+9. **Linear Upgrade Check**: Is this just a strictly better version of another card?
+10. **Main Effect Quality**: Are the primary effects interesting (buffs, debuffs, block, damage, card draw) rather than boring (small healing/energy)?
+11. **Resource Respect**: Does it properly handle out-of-combat resources like Essence?
+12. **Standalone Viability**: Is the card useful even without perfect synergy pieces?
 
 ## Output Format
 
@@ -112,6 +116,10 @@ Final Notes: Well-designed common attack that provides both damage and debuff ap
 - Breaks established game rules or buff/debuff system
 - Thematically inappropriate
 - Unbalanced for monster encounter scaling
+- **Linear upgrades**: Cards that are strictly better versions of other cards
+- **Boring main effects**: Cards whose primary effect is small healing or energy gain
+- **Resource violations**: Cards that inappropriately manipulate out-of-combat resources or reference banned resources (Blood, Mettle, etc.)
+- **Dead synergy cards**: Cards that are useless without specific other cards
 
 ### Needs Revision
 - Minor balance issues
@@ -135,4 +143,30 @@ Track these patterns in reviews:
 - Consider card's role in broader game ecosystem
 - Maintain consistency in evaluation standards
 - Prioritize playability and balance over novelty
+
+## Common Design Pitfalls to Watch For
+
+### Linear Upgrade Chains
+- Reject cards that are just "X but with +1 damage" or "Y but costs 1 less"
+- Powers should create different build paths, not just numerical progression
+- Each rarity should offer distinct gameplay, not just bigger numbers
+
+### Boring Main Effects
+- Small healing (1-5 HP) and energy gain (1-2 energy) should be riders, not primary effects
+- Primary effects should be: damage, block, buffs, debuffs, or card draw
+- Cards should impact combat meaningfully, not just provide tiny resource adjustments
+
+### Out-of-Combat Resource Violations
+- **Essence** can only be gained through Binding kills, never through card effects
+- **Essence** should rarely be referenced by cards (maybe 1 rare that scales with it)
+- **Essence** cannot be spent or lost via card effects - it's persistent character progression
+- **Blood, Mettle, and other combat resources**: Cards are BANNED from referencing these entirely
+- **"Properly handle"** means: cards can read/scale with out-of-combat resources but cannot modify them
+- Out-of-combat resources are managed by the character progression system, not individual cards
+
+### Dead Synergy Cards
+- Cards should have baseline utility even without perfect synergy
+- "If you have X, do Y" cards should still do something useful without X
+- Synergy should enhance, not enable basic functionality
+- **Conditional cards must have baseline effects**: Cards with "If X then Y" must also do something when X is false
 
