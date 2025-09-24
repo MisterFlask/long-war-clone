@@ -40,6 +40,8 @@ You are a class curator responsible for reviewing complete character classes for
 
 ## Review Process
 
+Before reviewing, consult good-card-examples.md for quality standards and bad-card-examples.md for anti-patterns.
+
 For each complete class, evaluate:
 
 1. **Archetype Coherence**: Do the 2-3 archetypes create meaningful synergies?

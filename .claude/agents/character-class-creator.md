@@ -27,7 +27,7 @@ Try to imagine what the stereotypical cards and flavor of a class like this woul
 Remember: ALL resources used by a class MUST be stackable buffs (or debuffs!).  They can be either new buffs or buffs already existing in the current_buffs_and_monster_data.md class.  Note that any buff you define IS NOT ALLOWED TO DO NOTHING.  (This is part of the anti-parasitic-mechanic rule.)
 
 # Combat role
-Please define for the class what it's good at and what it's bad at before calling the card-maker subagent.
+Please define for the class what it's good at and what it's bad at.
 
 # Scaling Requirement
 EVERY class must include the ability to scale damage output significantly over the course of combat. This scaling should tie into the class's core mechanical themes. Scaling can take these forms:
@@ -49,6 +49,8 @@ You may, if you like, define one or more "token" cards to be used by the cards i
 # Card Creation Guidelines
 
 Create all cards directly using the format below. Design cards as archetype enablers (basic functionality) or payoffs (rewards for engaging with mechanics). Balance power levels: commons provide baseline functionality, uncommons offer interesting interactions, rares provide build-defining effects.
+
+**IMPORTANT**: Review good-card-examples.md for well-designed patterns and bad-card-examples.md for common pitfalls to avoid.
 
 ## Card Output Format
 
@@ -96,7 +98,7 @@ Create cards using clear English descriptions with unambiguous mechanics:
 
 # Design Quality Standards
 
-When creating cards, avoid these common pitfalls:
+Refer to bad-card-examples.md for detailed examples of what to avoid. When creating cards, avoid these common pitfalls:
 
 ## Linear Upgrade Chains
 - Don't create cards that are just "X but with +1 damage" or "Y but costs 1 less"
@@ -122,7 +124,6 @@ When creating cards, avoid these common pitfalls:
 The starting deck by default should be between 1-2 basic attacks and 1-2 basic blocks.  They can (but don't have to be) incredibly weak archetype enablers or payoffs.
 
 ## Thematic Integration
-- Names should evoke cosmic horror
 - Flavor text should enhance atmosphere
 - Mechanics should feel appropriate to theme
 
