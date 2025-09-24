@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(/usr/bin/claude --agents .claude/agents/card-maker.md -- \"Create 2 basic attack cards for the Occultist class. They should be weak archetype enablers that work with the Ashes resource mechanic and stress manipulation. Each card should cost 1 energy and provide basic functionality for a starting deck. The Occultist is a former Hermetic Order member who uses forbidden knowledge and eldritch powers.\")",
+      "Bash(mkdir:*)",
+      "Bash(claude --agent card-maker \"Create a common attack card for the Hammer class. This should be a 1-energy attack that deals modest damage and provides a small retaliation effect. The card should support the retaliation archetype as an enabler. Include exact stack counts for all buffs.\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

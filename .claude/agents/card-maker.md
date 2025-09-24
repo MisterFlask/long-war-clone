@@ -44,20 +44,23 @@ Create cards using clear English descriptions with unambiguous mechanics:
 **Cost**: [Number] energy
 **Type**: Attack/Skill/Power
 **Rarity**: Common/Uncommon/Rare
+**Damage/Block**: [If applicable]
+**Properties**: [If applicable - Ethereal, Exhaust, etc.]
 
-**Mechanical Text**: [Clear, unambiguous description of what the card does, including exact stack counts for all buffs/debuffs]
+**Effect**: [Single field combining all mechanical effects, buffs, debuffs, and descriptions. Include exact stack counts for all buffs/debuffs]
 
 **Flavor Text**: [Atmospheric description]
 
 **Example**:
 Card Name: Void Strike
-Cost: 2 energy  
+Cost: 2 energy
 Type: Attack
 Rarity: Common
+Damage: 8
 
-Mechanical Text: Deal 8 damage to target enemy. Apply 1 stack of Weak to target enemy.
+Effect: Deal 8 damage to target enemy. Apply Weak (1) to target enemy.
 
-Flavor Text: "The darkness cuts deeper than steel."
+Flavor Text: "Frightfully inconsiderate of the chap to simply dissolve like that. One's blade hardly touched him." —Colonel Ashworth's memoir
 
 ## Buff Integration Guidelines
 
