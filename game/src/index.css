@@ -1,0 +1,96 @@
+/* Hell EIC - Global Styles */
+
+:root {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #f0e6d2;
+  background-color: #0d0505;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #0d0505;
+}
+
+body {
+  display: block;
+  min-width: 320px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  margin: 0;
+}
+
+a {
+  color: #d2691e;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ffd700;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/* Selection colors */
+::selection {
+  background: rgba(139, 69, 19, 0.5);
+  color: #ffd700;
+}
+
+::-moz-selection {
+  background: rgba(139, 69, 19, 0.5);
+  color: #ffd700;
+}
+
+/* Input styles */
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #8b4513;
+  border-radius: 4px;
+  color: #f0e6d2;
+  padding: 0.5rem;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+}
+
+/* Tooltip styles */
+[title] {
+  position: relative;
+}

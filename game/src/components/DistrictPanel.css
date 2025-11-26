@@ -1,0 +1,204 @@
+.district-panel {
+  padding: 1rem;
+}
+
+.district-panel h2 {
+  color: #f0e6d2;
+  margin-bottom: 1rem;
+  font-family: 'Georgia', serif;
+  border-bottom: 1px solid #8b4513;
+  padding-bottom: 0.5rem;
+}
+
+.districts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.district-card {
+  background: linear-gradient(180deg, #2d1515 0%, #1a0a0a 100%);
+  border: 1px solid #8b4513;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.district-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.district-card.unrevealed {
+  border-style: dashed;
+  opacity: 0.8;
+}
+
+.district-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.district-header h3 {
+  color: #ffd700;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.expand-icon {
+  color: #8b4513;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.district-description {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.district-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat {
+  display: grid;
+  grid-template-columns: 80px 1fr 50px;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.stat-bar-container {
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.stat-bar.authority {
+  background: linear-gradient(90deg, #8b0000, #dc143c);
+}
+
+.stat-bar.dominion {
+  background: linear-gradient(90deg, #228b22, #32cd32);
+}
+
+.stat-bar.notice {
+  background: linear-gradient(90deg, #b8860b, #ffd700);
+}
+
+.stat-bar.notice.warning {
+  background: linear-gradient(90deg, #ff8c00, #ffa500);
+}
+
+.stat-bar.notice.danger {
+  background: linear-gradient(90deg, #8b0000, #dc143c);
+  animation: pulse-notice 1s infinite;
+}
+
+@keyframes pulse-notice {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.stat-value {
+  font-size: 0.75rem;
+  color: #f0e6d2;
+  text-align: right;
+}
+
+.unrevealed-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  color: #666;
+  text-align: center;
+}
+
+.unrevealed-message span {
+  font-size: 1rem;
+}
+
+.unrevealed-message small {
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.workers-assigned {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(34, 139, 34, 0.2);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #90ee90;
+}
+
+.workers-icon {
+  font-size: 1rem;
+}
+
+.job-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #444;
+}
+
+.job-button {
+  flex: 1 1 calc(50% - 0.25rem);
+  min-width: 100px;
+  padding: 0.5rem;
+  background: linear-gradient(180deg, #4a3728 0%, #2d1f16 100%);
+  border: 1px solid #8b4513;
+  border-radius: 4px;
+  color: #f0e6d2;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.job-button:hover:not(.disabled) {
+  background: linear-gradient(180deg, #5c4630 0%, #3d2a1c 100%);
+  border-color: #d2691e;
+}
+
+.job-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.job-name {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.job-cost {
+  font-size: 0.7rem;
+  color: #a0522d;
+}
