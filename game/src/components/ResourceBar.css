@@ -1,0 +1,176 @@
+.resource-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, #1a0a0a 0%, #2d1515 100%);
+  border-bottom: 2px solid #8b4513;
+  padding: 0.75rem 1.5rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.resource-group {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.resource {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+.resource-icon {
+  font-size: 1.25rem;
+}
+
+.resource.sovereigns .resource-icon {
+  color: #ffd700;
+}
+
+.resource.materiel .resource-icon {
+  color: #a0522d;
+}
+
+.resource.influence .resource-icon {
+  color: #9932cc;
+}
+
+.resource-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.resource-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #f0e6d2;
+}
+
+.status-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+}
+
+.status-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.status-value {
+  font-size: 1rem;
+  color: #f0e6d2;
+}
+
+.phase-badge {
+  text-transform: capitalize;
+  background: #4a3728;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+}
+
+.threat-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.threat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.threat-item.warning {
+  background: rgba(255, 165, 0, 0.2);
+  border: 1px solid #ffa500;
+}
+
+.threat-item.danger {
+  background: rgba(139, 0, 0, 0.3);
+  border: 1px solid #dc143c;
+  animation: pulse-danger 1.5s infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.threat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.threat-value {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #f0e6d2;
+}
+
+.profit-tracker {
+  min-width: 200px;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.profit-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.profit-bar-container {
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.profit-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8b4513, #d2691e);
+  transition: width 0.3s ease;
+}
+
+.profit-bar.warning {
+  background: linear-gradient(90deg, #b8860b, #ffd700);
+}
+
+.profit-bar.success {
+  background: linear-gradient(90deg, #228b22, #32cd32);
+}
+
+.profit-numbers {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  color: #f0e6d2;
+}
+
+.profit-numbers .negative {
+  color: #dc143c;
+}
