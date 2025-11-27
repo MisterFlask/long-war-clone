@@ -1,13 +1,41 @@
 /* Tooltip Component Styles - Dark Fantasy Theme */
 
+/*
+ * TOOLTIP ARCHITECTURE:
+ *
+ * This tooltip system uses React Portals to render tooltips directly to document.body,
+ * ensuring they are never clipped by parent overflow constraints.
+ *
+ * Positioning Strategy:
+ * - Tooltips follow the mouse cursor
+ * - Smart quadrant detection places tooltips in the opposite quadrant from cursor
+ * - Cursor in upper-right → tooltip appears in lower-left
+ * - Cursor in lower-left → tooltip appears in upper-right
+ * - Viewport boundary clamping ensures tooltips stay fully visible
+ *
+ * Z-Index Strategy:
+ * - Tooltips use z-index: 999999 to ensure they appear above all other elements
+ * - This is intentionally much higher than any other UI element
+ */
+
 .tooltip-wrapper {
   display: inline-flex;
   position: relative;
 }
 
+/* Portal-based tooltip - rendered directly to document.body */
+.tooltip-portal {
+  position: fixed;
+  z-index: 999999; /* Extremely high to ensure tooltips are always on top */
+  padding: 0;
+  pointer-events: none;
+  animation: tooltipFadeIn 0.15s ease-out;
+  min-width: 320px;
+  width: max-content;
+}
+
+/* Legacy tooltip class (kept for compatibility but portal takes precedence) */
 .tooltip {
-  position: absolute;
-  z-index: 1000;
   padding: 0;
   pointer-events: none;
   animation: tooltipFadeIn 0.15s ease-out;
@@ -18,11 +46,11 @@
 @keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 
@@ -38,79 +66,6 @@
     0 4px 12px rgba(0, 0, 0, 0.6),
     0 0 20px rgba(139, 69, 19, 0.2),
     inset 0 1px 0 rgba(255, 215, 0, 0.1);
-}
-
-.tooltip-arrow {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: #1a0a0a;
-  border: 1px solid #8b4513;
-  transform: rotate(45deg);
-}
-
-/* Position: Top */
-.tooltip-top {
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 8px;
-}
-
-.tooltip-top .tooltip-arrow {
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  border-top: none;
-  border-left: none;
-}
-
-/* Position: Bottom */
-.tooltip-bottom {
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-top: 8px;
-}
-
-.tooltip-bottom .tooltip-arrow {
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  border-bottom: none;
-  border-right: none;
-}
-
-/* Position: Left */
-.tooltip-left {
-  right: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-right: 8px;
-}
-
-.tooltip-left .tooltip-arrow {
-  right: -5px;
-  top: 50%;
-  transform: translateY(-50%) rotate(45deg);
-  border-left: none;
-  border-bottom: none;
-}
-
-/* Position: Right */
-.tooltip-right {
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  margin-left: 8px;
-}
-
-.tooltip-right .tooltip-arrow {
-  left: -5px;
-  top: 50%;
-  transform: translateY(-50%) rotate(45deg);
-  border-right: none;
-  border-top: none;
 }
 
 /* Formatted tooltip content */
@@ -190,4 +145,23 @@
 
 .tooltip-stat-danger {
   color: #ff6347;
+}
+
+/* ============================================
+ * LEGACY POSITION STYLES (kept for reference)
+ * These are no longer used with portal-based
+ * rendering but kept for documentation.
+ * ============================================ */
+
+/* These styles are deprecated - portal tooltips use fixed positioning */
+.tooltip-arrow {
+  display: none; /* Arrows don't make sense for cursor-following tooltips */
+}
+
+/* Legacy position classes - no longer needed with smart positioning */
+.tooltip-top,
+.tooltip-bottom,
+.tooltip-left,
+.tooltip-right {
+  /* These are overridden by inline styles from the portal */
 }
