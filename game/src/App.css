@@ -44,6 +44,51 @@
   text-transform: uppercase;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-toggle {
+  display: flex;
+  background: #1a0a0a;
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Georgia', serif;
+}
+
+.view-toggle-btn:hover {
+  background: rgba(139, 69, 19, 0.3);
+  color: #f0e6d2;
+}
+
+.view-toggle-btn.active {
+  background: linear-gradient(180deg, #4a3728 0%, #2d1f16 100%);
+  color: #ffd700;
+}
+
+.view-icon {
+  font-size: 1rem;
+}
+
+.view-label {
+  font-size: 0.85rem;
+}
+
 .header-motto {
   color: #888;
   font-size: 0.9rem;
@@ -128,6 +173,18 @@
 
   .header-title h1 {
     font-size: 1.5rem;
+  }
+
+  .header-controls {
+    order: 3;
+  }
+
+  .view-toggle-btn {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .view-label {
+    display: none;
   }
 
   .game-main {

@@ -278,17 +278,81 @@ export const JOB_CONFIGS: Record<WorkerJob, JobConfig> = {
   },
 };
 
-// District names pool
-export const DISTRICT_NAMES = [
-  { name: 'Char Market', description: 'A bustling bazaar where souls and goods exchange hands under perpetual smoke.' },
-  { name: 'The Brass Warrens', description: 'A labyrinth of copper pipes and industrial forges, home to damned craftsmen.' },
-  { name: 'Ashfall Reach', description: 'Volcanic plains where the most valuable minerals are harvested.' },
-  { name: 'The Gilded Pit', description: 'Where fallen merchants continue their dealings in tarnished luxury.' },
-  { name: 'Sulphur Downs', description: 'Rolling hills of brimstone, rich in alchemical resources.' },
-  { name: 'The Screaming Docks', description: 'A port on the River Styx where infernal cargo is loaded and unloaded.' },
-  { name: 'Cinder Row', description: 'Former residential district, now a smoldering ruin of opportunity.' },
-  { name: 'The Iron Chancery', description: 'Administrative center where contracts are filed and fates are sealed.' },
+// Map coordinates for districts (percentage-based, 0-100)
+export interface MapCoordinates {
+  x: number;  // 0-100 percentage from left
+  y: number;  // 0-100 percentage from top
+}
+
+// District template with name, description, and map position
+export interface DistrictTemplate {
+  name: string;
+  description: string;
+  mapPosition: MapCoordinates;
+  // Visual properties for the map
+  terrain: 'volcanic' | 'industrial' | 'urban' | 'docks' | 'wasteland';
+}
+
+// District names pool with map coordinates
+// Arranged in a roughly circular pattern representing the circles of Hell
+export const DISTRICT_NAMES: DistrictTemplate[] = [
+  {
+    name: 'Char Market',
+    description: 'A bustling bazaar where souls and goods exchange hands under perpetual smoke.',
+    mapPosition: { x: 50, y: 20 },
+    terrain: 'urban'
+  },
+  {
+    name: 'The Brass Warrens',
+    description: 'A labyrinth of copper pipes and industrial forges, home to damned craftsmen.',
+    mapPosition: { x: 80, y: 35 },
+    terrain: 'industrial'
+  },
+  {
+    name: 'Ashfall Reach',
+    description: 'Volcanic plains where the most valuable minerals are harvested.',
+    mapPosition: { x: 85, y: 65 },
+    terrain: 'volcanic'
+  },
+  {
+    name: 'The Gilded Pit',
+    description: 'Where fallen merchants continue their dealings in tarnished luxury.',
+    mapPosition: { x: 65, y: 80 },
+    terrain: 'urban'
+  },
+  {
+    name: 'Sulphur Downs',
+    description: 'Rolling hills of brimstone, rich in alchemical resources.',
+    mapPosition: { x: 35, y: 80 },
+    terrain: 'wasteland'
+  },
+  {
+    name: 'The Screaming Docks',
+    description: 'A port on the River Styx where infernal cargo is loaded and unloaded.',
+    mapPosition: { x: 15, y: 65 },
+    terrain: 'docks'
+  },
+  {
+    name: 'Cinder Row',
+    description: 'Former residential district, now a smoldering ruin of opportunity.',
+    mapPosition: { x: 20, y: 35 },
+    terrain: 'wasteland'
+  },
+  {
+    name: 'The Iron Chancery',
+    description: 'Administrative center where contracts are filed and fates are sealed.',
+    mapPosition: { x: 55, y: 55 },
+    terrain: 'industrial'
+  },
 ];
+
+// Helper to get district template by name
+export function getDistrictTemplate(name: string): DistrictTemplate | undefined {
+  return DISTRICT_NAMES.find(d => d.name === name);
+}
+
+// Company HQ position (center-left of the map, near the River Styx)
+export const HQ_POSITION: MapCoordinates = { x: 45, y: 45 };
 
 // Agent name pools
 export const AGENT_FIRST_NAMES = [

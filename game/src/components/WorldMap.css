@@ -1,0 +1,552 @@
+/* World Map Styles */
+
+.world-map-container {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.map-header h2 {
+  color: #f0e6d2;
+  margin-bottom: 1rem;
+  font-family: 'Georgia', serif;
+  border-bottom: 1px solid #8b4513;
+  padding-bottom: 0.5rem;
+}
+
+.map-content {
+  position: relative;
+  flex: 1;
+  min-height: 500px;
+  background: linear-gradient(180deg, #0d0505 0%, #1a0a0a 100%);
+  border: 2px solid #8b4513;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.world-map-svg {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* River Styx animation */
+.river-styx {
+  animation: river-flow 20s linear infinite;
+}
+
+@keyframes river-flow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 200;
+  }
+}
+
+/* District node styles */
+.district-node {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.district-node:hover {
+  filter: brightness(1.2);
+}
+
+.district-node.selected .node-main {
+  filter: drop-shadow(0 0 10px #ffd700);
+}
+
+.district-node .node-glow {
+  transition: opacity 0.3s ease;
+}
+
+.district-node:hover .node-glow {
+  opacity: 0.7;
+}
+
+.district-node .node-main {
+  transition: stroke-width 0.2s ease;
+}
+
+.district-label {
+  font-family: 'Georgia', serif;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
+  pointer-events: none;
+}
+
+.unrevealed-indicator {
+  font-weight: bold;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.mini-stats text {
+  font-family: 'Courier New', monospace;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Worker badge animation */
+.worker-badge circle {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Mission badge animation */
+.mission-badge .mission-pulse {
+  animation: mission-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes mission-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px #ffd700);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px #ffd700);
+  }
+}
+
+/* Danger pulse for high-notice districts */
+.danger-pulse {
+  animation: danger-expand 1.5s ease-out infinite;
+}
+
+@keyframes danger-expand {
+  0% {
+    opacity: 0.8;
+    r: 50;
+  }
+  100% {
+    opacity: 0;
+    r: 80;
+  }
+}
+
+.node-glow.danger {
+  stroke: #dc143c !important;
+  animation: glow-danger 1s ease-in-out infinite;
+}
+
+.node-glow.warning {
+  stroke: #ffa500 !important;
+}
+
+@keyframes glow-danger {
+  0%, 100% { opacity: 0.5; stroke-width: 2; }
+  50% { opacity: 0.9; stroke-width: 4; }
+}
+
+/* HQ node */
+.hq-node {
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+.hq-node text {
+  font-family: 'Georgia', serif;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Mission path styles */
+.mission-path {
+  pointer-events: none;
+}
+
+.path-animated {
+  stroke-dasharray: 10, 5;
+  animation: dash-move 1s linear infinite;
+}
+
+@keyframes dash-move {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -15;
+  }
+}
+
+.agent-marker {
+  animation: agent-move 2s ease-in-out infinite alternate;
+}
+
+@keyframes agent-move {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Background elements */
+.background-flames ellipse {
+  animation: flame-flicker 3s ease-in-out infinite alternate;
+}
+
+@keyframes flame-flicker {
+  0% { opacity: 0.2; }
+  100% { opacity: 0.4; }
+}
+
+.mountains {
+  pointer-events: none;
+}
+
+/* Map Legend */
+.map-legend {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(13, 5, 5, 0.9);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 0.75rem;
+  min-width: 150px;
+}
+
+.map-legend h4 {
+  color: #ffd700;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  font-family: 'Georgia', serif;
+  border-bottom: 1px solid #4a3728;
+  padding-bottom: 0.25rem;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #f0e6d2;
+}
+
+.legend-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.legend-icon.hq-icon {
+  background: linear-gradient(180deg, #ffd700 0%, #8b4513 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  border-radius: 0;
+}
+
+.legend-icon.district-icon {
+  background: radial-gradient(circle, #8b4513, #2d1515);
+  border: 1px solid #a0522d;
+}
+
+.legend-icon.worker-icon {
+  background: #228b22;
+  border: 2px solid #f0e6d2;
+  width: 14px;
+  height: 14px;
+}
+
+.legend-icon.mission-icon {
+  background: #b8860b;
+  border: 2px solid #ffd700;
+  width: 14px;
+  height: 14px;
+}
+
+.legend-icon.danger-icon {
+  background: transparent;
+  border: 2px solid #dc143c;
+  box-shadow: 0 0 5px #dc143c;
+}
+
+/* District Detail Panel */
+.district-detail-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 280px;
+  background: linear-gradient(180deg, #2d1515 0%, #1a0a0a 100%);
+  border: 2px solid #8b4513;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #8b4513;
+  padding-bottom: 0.5rem;
+}
+
+.detail-header h3 {
+  color: #ffd700;
+  margin: 0;
+  font-family: 'Georgia', serif;
+  font-size: 1rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #f0e6d2;
+}
+
+.detail-description {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.detail-terrain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.terrain-label {
+  color: #888;
+}
+
+.terrain-type {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.terrain-type.volcanic {
+  background: rgba(139, 0, 0, 0.3);
+  color: #ff4500;
+  border: 1px solid #ff4500;
+}
+
+.terrain-type.industrial {
+  background: rgba(139, 69, 19, 0.3);
+  color: #cd853f;
+  border: 1px solid #cd853f;
+}
+
+.terrain-type.urban {
+  background: rgba(139, 69, 19, 0.3);
+  color: #ffd700;
+  border: 1px solid #ffd700;
+}
+
+.terrain-type.docks {
+  background: rgba(70, 130, 180, 0.3);
+  color: #5f9ea0;
+  border: 1px solid #5f9ea0;
+}
+
+.terrain-type.wasteland {
+  background: rgba(160, 82, 45, 0.3);
+  color: #d2691e;
+  border: 1px solid #d2691e;
+}
+
+.detail-stats {
+  margin-bottom: 0.75rem;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 45px;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.stat-name {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #888;
+}
+
+.stat-bar-bg {
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.stat-bar-fill.authority {
+  background: linear-gradient(90deg, #8b0000, #dc143c);
+}
+
+.stat-bar-fill.dominion {
+  background: linear-gradient(90deg, #228b22, #32cd32);
+}
+
+.stat-bar-fill.notice {
+  background: linear-gradient(90deg, #b8860b, #ffd700);
+}
+
+.stat-bar-fill.notice.warning {
+  background: linear-gradient(90deg, #ff8c00, #ffa500);
+}
+
+.stat-bar-fill.notice.danger {
+  background: linear-gradient(90deg, #8b0000, #dc143c);
+  animation: pulse-stat 1s infinite;
+}
+
+@keyframes pulse-stat {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.stat-val {
+  font-size: 0.75rem;
+  color: #f0e6d2;
+  text-align: right;
+}
+
+.unrevealed-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  color: #666;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.unrevealed-notice span {
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.unrevealed-notice small {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.workers-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(34, 139, 34, 0.2);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #90ee90;
+  margin-bottom: 0.75rem;
+}
+
+.job-actions {
+  border-top: 1px solid #444;
+  padding-top: 0.75rem;
+}
+
+.job-actions h4 {
+  color: #f0e6d2;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.job-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+}
+
+.job-btn {
+  padding: 0.5rem 0.4rem;
+  background: linear-gradient(180deg, #4a3728 0%, #2d1f16 100%);
+  border: 1px solid #8b4513;
+  border-radius: 4px;
+  color: #f0e6d2;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.job-btn:hover:not(.disabled) {
+  background: linear-gradient(180deg, #5c4630 0%, #3d2a1c 100%);
+  border-color: #d2691e;
+}
+
+.job-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.job-btn-name {
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.job-btn-cost {
+  font-size: 0.65rem;
+  color: #a0522d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .district-detail-panel {
+    width: 250px;
+  }
+
+  .map-legend {
+    min-width: 120px;
+    padding: 0.5rem;
+  }
+
+  .legend-item {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .district-detail-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 50vh;
+    border-radius: 8px 8px 0 0;
+    z-index: 100;
+  }
+
+  .map-legend {
+    bottom: auto;
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+}
