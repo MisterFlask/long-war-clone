@@ -1,0 +1,191 @@
+/* Tooltip Component Styles - Dark Fantasy Theme */
+
+.tooltip-wrapper {
+  display: inline-flex;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 1000;
+  padding: 0;
+  pointer-events: none;
+  animation: tooltipFadeIn 0.15s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-content {
+  background: linear-gradient(135deg, #1a0a0a 0%, #2d1810 100%);
+  border: 1px solid #8b4513;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #f0e6d2;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(139, 69, 19, 0.2),
+    inset 0 1px 0 rgba(255, 215, 0, 0.1);
+}
+
+.tooltip-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #1a0a0a;
+  border: 1px solid #8b4513;
+  transform: rotate(45deg);
+}
+
+/* Position: Top */
+.tooltip-top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+}
+
+.tooltip-top .tooltip-arrow {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-top: none;
+  border-left: none;
+}
+
+/* Position: Bottom */
+.tooltip-bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+}
+
+.tooltip-bottom .tooltip-arrow {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom: none;
+  border-right: none;
+}
+
+/* Position: Left */
+.tooltip-left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 8px;
+}
+
+.tooltip-left .tooltip-arrow {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+
+/* Position: Right */
+.tooltip-right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+}
+
+.tooltip-right .tooltip-arrow {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+}
+
+/* Formatted tooltip content */
+.tooltip-formatted {
+  text-align: left;
+}
+
+.tooltip-title {
+  font-weight: 700;
+  color: #ffd700;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.tooltip-description {
+  color: #d4c4a8;
+  margin-bottom: 8px;
+}
+
+.tooltip-details {
+  margin: 8px 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.tooltip-details li {
+  position: relative;
+  color: #c9b896;
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.tooltip-details li::before {
+  content: '\2022';
+  color: #8b4513;
+  position: absolute;
+  left: -12px;
+}
+
+.tooltip-cost {
+  color: #cd5c5c;
+  font-size: 0.8rem;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+.tooltip-reward {
+  color: #90ee90;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.tooltip-warning {
+  color: #ff6347;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 99, 71, 0.3);
+}
+
+/* Stat-specific tooltip styling */
+.tooltip-stat-value {
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.tooltip-stat-good {
+  color: #90ee90;
+}
+
+.tooltip-stat-warning {
+  color: #ffa500;
+}
+
+.tooltip-stat-danger {
+  color: #ff6347;
+}
