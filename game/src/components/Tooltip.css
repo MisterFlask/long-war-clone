@@ -11,6 +11,8 @@
   padding: 0;
   pointer-events: none;
   animation: tooltipFadeIn 0.15s ease-out;
+  min-width: 320px;
+  width: max-content;
 }
 
 @keyframes tooltipFadeIn {
