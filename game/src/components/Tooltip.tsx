@@ -15,7 +15,7 @@ export function Tooltip({
   children,
   position = 'top',
   delay = 200,
-  maxWidth = 280,
+  maxWidth = 420,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [actualPosition, setActualPosition] = useState(position);
