@@ -5,6 +5,7 @@ import type {
   Agent,
   District,
   Mission,
+  MissionOpportunity,
   WorkerAssignment,
   MissionType,
   WorkerJob,
@@ -21,6 +22,7 @@ import {
   DISTRICT_NAMES,
   AGENT_FIRST_NAMES,
   AGENT_LAST_NAMES,
+  MISSION_FLAVOR_TEXTS,
 } from '../types/game';
 
 // Utility functions
@@ -62,6 +64,117 @@ export function createDistrict(index: number): District {
   };
 }
 
+// Generate a single mission opportunity
+export function generateMissionOpportunity(
+  districts: District[],
+  existingOpportunities: MissionOpportunity[]
+): MissionOpportunity | null {
+  // Get available mission types
+  const missionTypes: MissionType[] = [
+    'extraction_run',
+    'sabotage',
+    'interdiction',
+    'smuggling',
+    'tribute_delivery',
+  ];
+
+  // Pick a random mission type with some weighting
+  // More common: extraction, smuggling. Less common: sabotage
+  const typeWeights: Record<MissionType, number> = {
+    extraction_run: 3,
+    smuggling: 3,
+    interdiction: 2,
+    tribute_delivery: 2,
+    sabotage: 1,
+  };
+
+  const weightedTypes: MissionType[] = [];
+  for (const type of missionTypes) {
+    for (let i = 0; i < typeWeights[type]; i++) {
+      weightedTypes.push(type);
+    }
+  }
+
+  const type = randomElement(weightedTypes);
+
+  // Pick a random district
+  const district = randomElement(districts);
+
+  // Check if there's already a mission of this type in this district
+  const duplicate = existingOpportunities.find(
+    (m) => m.type === type && m.districtId === district.id
+  );
+  if (duplicate) {
+    return null; // Don't create duplicate opportunities
+  }
+
+  // Generate difficulty and reward modifiers
+  // Higher authority districts tend to have harder but more rewarding missions
+  const authorityFactor = (district.infernalAuthority - 5) / 5; // -1 to 0.6
+  const difficultyBonus = Math.floor(Math.random() * 3) + Math.round(authorityFactor);
+  const rewardBonus = 0.8 + Math.random() * 0.7 + authorityFactor * 0.2; // 0.8 to 1.5+
+
+  // Generate expiry (2-5 weeks)
+  const weeksUntilExpiry = 2 + Math.floor(Math.random() * 4);
+
+  // Pick flavor text
+  const flavorTexts = MISSION_FLAVOR_TEXTS[type];
+  const flavorText = randomElement(flavorTexts);
+
+  return {
+    id: generateId(),
+    type,
+    districtId: district.id,
+    weeksUntilExpiry,
+    difficultyBonus: clamp(difficultyBonus, -2, 3),
+    rewardBonus: Math.round(rewardBonus * 100) / 100, // Round to 2 decimals
+    flavorText,
+  };
+}
+
+// Generate multiple mission opportunities for start of game or new week
+export function generateMissionOpportunities(
+  state: GameState,
+  count: number
+): MissionOpportunity[] {
+  const newOpportunities: MissionOpportunity[] = [...state.availableMissions];
+  let attempts = 0;
+  const maxAttempts = count * 3; // Prevent infinite loops
+
+  while (newOpportunities.length < state.availableMissions.length + count && attempts < maxAttempts) {
+    const opportunity = generateMissionOpportunity(state.districts, newOpportunities);
+    if (opportunity) {
+      newOpportunities.push(opportunity);
+    }
+    attempts++;
+  }
+
+  return newOpportunities.slice(state.availableMissions.length);
+}
+
+// Expire missions and decrement timers
+export function processOpportunityExpiry(state: GameState): GameState {
+  const updatedOpportunities = state.availableMissions
+    .map((m) => ({
+      ...m,
+      weeksUntilExpiry: m.weeksUntilExpiry - 1,
+    }))
+    .filter((m) => m.weeksUntilExpiry > 0);
+
+  const expiredCount = state.availableMissions.length - updatedOpportunities.length;
+
+  let newState = { ...state, availableMissions: updatedOpportunities };
+
+  if (expiredCount > 0) {
+    newState = addMessage(
+      newState,
+      `${expiredCount} mission opportunit${expiredCount > 1 ? 'ies have' : 'y has'} expired.`
+    );
+  }
+
+  return newState;
+}
+
 // Create initial game state
 export function createInitialGameState(): GameState {
   // Create 4 districts
@@ -76,7 +189,8 @@ export function createInitialGameState(): GameState {
     ...Array.from({ length: 2 }, () => createAgent(2)),
   ];
 
-  return {
+  // Generate initial mission opportunities (3-4 to start)
+  const initialState: GameState = {
     resources: {
       sovereigns: 500,
       materiel: 30,
@@ -87,6 +201,7 @@ export function createInitialGameState(): GameState {
     agents,
     districts,
     missions: [],
+    availableMissions: [],
     currentWeek: 1,
     currentQuarter: 1,
     phase: 'assignment',
@@ -99,6 +214,18 @@ export function createInitialGameState(): GameState {
     victory: false,
     currentEvent: null,
     messages: ['Welcome to Hell EIC. The Company expects results. Do not disappoint.'],
+  };
+
+  // Generate 3-4 initial mission opportunities
+  const initialMissions = generateMissionOpportunities(initialState, 3 + Math.floor(Math.random() * 2));
+
+  return {
+    ...initialState,
+    availableMissions: initialMissions,
+    messages: [
+      ...initialState.messages,
+      `${initialMissions.length} mission opportunities are available. Choose wisely.`,
+    ],
   };
 }
 
@@ -200,7 +327,72 @@ export function getAvailableAgents(state: GameState): Agent[] {
   );
 }
 
-// Create a new mission
+// Accept a mission from available opportunities
+export function acceptMission(
+  state: GameState,
+  opportunityId: string,
+  agentIds: string[],
+  preparationWeeks: number
+): GameState {
+  const opportunity = state.availableMissions.find((m) => m.id === opportunityId);
+  if (!opportunity) {
+    return addMessage(state, 'This mission opportunity is no longer available.');
+  }
+
+  const config = MISSION_CONFIGS[opportunity.type];
+
+  if (agentIds.length < config.minAgents || agentIds.length > config.maxAgents) {
+    return addMessage(
+      state,
+      `${config.name} requires ${config.minAgents}-${config.maxAgents} agents.`
+    );
+  }
+
+  // Check costs
+  if (config.cost?.sovereigns && state.resources.sovereigns < config.cost.sovereigns) {
+    return addMessage(state, `${config.name} costs ${config.cost.sovereigns} Sovereigns.`);
+  }
+  if (config.cost?.materiel && state.resources.materiel < config.cost.materiel) {
+    return addMessage(state, `${config.name} costs ${config.cost.materiel} Materiel.`);
+  }
+
+  // Deduct costs
+  let newState = state;
+  if (config.cost?.sovereigns) {
+    newState = modifyResources(newState, { sovereigns: -config.cost.sovereigns });
+  }
+  if (config.cost?.materiel) {
+    newState = modifyResources(newState, { materiel: -config.cost.materiel });
+  }
+
+  const mission: Mission = {
+    id: generateId(),
+    type: opportunity.type,
+    districtId: opportunity.districtId,
+    assignedAgents: agentIds,
+    preparationWeeks,
+    weeksRemaining: preparationWeeks,
+    status: 'preparing',
+    difficultyBonus: opportunity.difficultyBonus,
+    rewardBonus: opportunity.rewardBonus,
+  };
+
+  const district = state.districts.find((d) => d.id === opportunity.districtId);
+  const difficultyLabel = opportunity.difficultyBonus > 0 ? ' (challenging)' : opportunity.difficultyBonus < 0 ? ' (favorable)' : '';
+  newState = addMessage(
+    newState,
+    `Mission "${config.name}"${difficultyLabel} accepted in ${district?.name || 'unknown district'}. Preparation: ${preparationWeeks} week(s).`
+  );
+
+  // Remove the opportunity from available missions
+  return {
+    ...newState,
+    missions: [...newState.missions, mission],
+    availableMissions: newState.availableMissions.filter((m) => m.id !== opportunityId),
+  };
+}
+
+// Legacy createMission for backwards compatibility (now deprecated)
 export function createMission(
   state: GameState,
   type: MissionType,
@@ -287,11 +479,34 @@ export function calculateMissionSuccess(
   // Preparation modifier: -30 (1 week) to +25 (5+ weeks)
   const prepMod = [-30, -15, 0, 10, 25][Math.min(mission.preparationWeeks - 1, 4)];
 
-  // Difficulty from district authority + mission type
-  const difficulty = district.infernalAuthority + config.difficultyMod;
+  // Difficulty from district authority + mission type + opportunity bonus
+  const opportunityDifficulty = mission.difficultyBonus || 0;
+  const difficulty = district.infernalAuthority + config.difficultyMod + opportunityDifficulty;
 
   const successChance = 50 + agentLevels * 5 + prepMod - difficulty * 8;
   return clamp(successChance, 5, 95);
+}
+
+// Calculate mission success for an opportunity (before it's accepted)
+export function calculateOpportunitySuccess(
+  state: GameState,
+  opportunity: MissionOpportunity,
+  agentIds: string[],
+  preparationWeeks: number
+): number {
+  // Create a mock mission to calculate success
+  const mockMission: Mission = {
+    id: 'preview',
+    type: opportunity.type,
+    districtId: opportunity.districtId,
+    assignedAgents: agentIds,
+    preparationWeeks,
+    weeksRemaining: preparationWeeks,
+    status: 'preparing',
+    difficultyBonus: opportunity.difficultyBonus,
+    rewardBonus: opportunity.rewardBonus,
+  };
+  return calculateMissionSuccess(state, mockMission);
 }
 
 // Resolve a single mission
@@ -358,11 +573,13 @@ function resolveMission(state: GameState, mission: Mission): GameState {
 
   // Apply mission results
   const newDistricts = [...newState.districts];
+  const rewardMultiplier = mission.rewardBonus || 1.0;
 
   if (success) {
     switch (mission.type) {
       case 'extraction_run': {
-        const materielGain = 5 + Math.floor(Math.random() * 11); // 5-15
+        const baseMateriel = 5 + Math.floor(Math.random() * 11); // 5-15
+        const materielGain = Math.floor(baseMateriel * rewardMultiplier);
         newState = modifyResources(newState, { materiel: materielGain });
         newState = addMessage(
           newState,
@@ -371,29 +588,32 @@ function resolveMission(state: GameState, mission: Mission): GameState {
         break;
       }
       case 'sabotage': {
+        const authorityReduction = Math.floor(2 * rewardMultiplier);
         newDistricts[districtIndex] = {
           ...district,
-          infernalAuthority: Math.max(0, district.infernalAuthority - 2),
+          infernalAuthority: Math.max(0, district.infernalAuthority - authorityReduction),
         };
         newState = addMessage(
           newState,
-          `Sabotage SUCCESS in ${district.name}: Authority reduced by 2`
+          `Sabotage SUCCESS in ${district.name}: Authority reduced by ${authorityReduction}`
         );
         break;
       }
       case 'interdiction': {
+        const authorityReduction = Math.max(1, Math.floor(1 * rewardMultiplier));
         newDistricts[districtIndex] = {
           ...district,
-          infernalAuthority: Math.max(0, district.infernalAuthority - 1),
+          infernalAuthority: Math.max(0, district.infernalAuthority - authorityReduction),
         };
         newState = addMessage(
           newState,
-          `Interdiction SUCCESS in ${district.name}: Authority reduced by 1`
+          `Interdiction SUCCESS in ${district.name}: Authority reduced by ${authorityReduction}`
         );
         break;
       }
       case 'smuggling': {
-        const sovereignsGain = 50 + Math.floor(Math.random() * 101); // 50-150
+        const baseSovereigns = 50 + Math.floor(Math.random() * 101); // 50-150
+        const sovereignsGain = Math.floor(baseSovereigns * rewardMultiplier);
         newState = modifyResources(newState, { sovereigns: sovereignsGain });
         newState = addMessage(
           newState,
@@ -402,13 +622,14 @@ function resolveMission(state: GameState, mission: Mission): GameState {
         break;
       }
       case 'tribute_delivery': {
+        const noticeReduction = Math.floor(3 * rewardMultiplier);
         newDistricts[districtIndex] = {
           ...district,
-          notice: Math.max(0, district.notice - 3),
+          notice: Math.max(0, district.notice - noticeReduction),
         };
         newState = addMessage(
           newState,
-          `Tribute Delivery SUCCESS in ${district.name}: Notice reduced by 3`
+          `Tribute Delivery SUCCESS in ${district.name}: Notice reduced by ${noticeReduction}`
         );
         break;
       }
@@ -777,12 +998,37 @@ export function advancePhase(state: GameState): GameState {
       break;
     case 'event':
       // Random events could go here
-      // For now, just advance the week
+      // Advance the week
       newState = {
         ...newState,
         currentWeek: newState.currentWeek + 1,
       };
       newState = checkQuarterEnd(newState);
+
+      // Process mission opportunity expiry (decrement timers, remove expired)
+      newState = processOpportunityExpiry(newState);
+
+      // Generate new mission opportunities (1-3 per week, capped at 6 total)
+      const maxOpportunities = 6;
+      const currentCount = newState.availableMissions.length;
+      if (currentCount < maxOpportunities) {
+        const newMissionCount = Math.min(
+          1 + Math.floor(Math.random() * 3), // 1-3 new missions
+          maxOpportunities - currentCount
+        );
+        const newOpportunities = generateMissionOpportunities(newState, newMissionCount);
+        if (newOpportunities.length > 0) {
+          newState = {
+            ...newState,
+            availableMissions: [...newState.availableMissions, ...newOpportunities],
+          };
+          newState = addMessage(
+            newState,
+            `${newOpportunities.length} new mission opportunit${newOpportunities.length > 1 ? 'ies have' : 'y has'} become available.`
+          );
+        }
+      }
+
       newState = addMessage(
         newState,
         `--- Week ${newState.currentWeek}, Quarter ${newState.currentQuarter} ---`

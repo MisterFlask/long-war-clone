@@ -9,6 +9,7 @@ import {
   assignWorker,
   unassignWorker,
   createMission,
+  acceptMission,
   cancelMission,
   advancePhase,
   advanceWeek,
@@ -20,6 +21,7 @@ type GameAction =
   | { type: 'ASSIGN_WORKER'; districtId: string; job: WorkerJob }
   | { type: 'UNASSIGN_WORKER'; index: number }
   | { type: 'CREATE_MISSION'; missionType: MissionType; districtId: string; agentIds: string[]; preparationWeeks: number }
+  | { type: 'ACCEPT_MISSION'; opportunityId: string; agentIds: string[]; preparationWeeks: number }
   | { type: 'CANCEL_MISSION'; missionId: string }
   | { type: 'ADVANCE_PHASE' }
   | { type: 'ADVANCE_WEEK' }
@@ -39,6 +41,13 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         state,
         action.missionType,
         action.districtId,
+        action.agentIds,
+        action.preparationWeeks
+      );
+    case 'ACCEPT_MISSION':
+      return acceptMission(
+        state,
+        action.opportunityId,
         action.agentIds,
         action.preparationWeeks
       );
@@ -107,6 +116,17 @@ export function useGameActions() {
         type: 'CREATE_MISSION',
         missionType,
         districtId,
+        agentIds,
+        preparationWeeks,
+      }),
+    acceptMission: (
+      opportunityId: string,
+      agentIds: string[],
+      preparationWeeks: number
+    ) =>
+      dispatch({
+        type: 'ACCEPT_MISSION',
+        opportunityId,
         agentIds,
         preparationWeeks,
       }),
