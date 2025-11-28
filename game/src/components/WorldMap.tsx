@@ -7,11 +7,10 @@ import './WorldMap.css';
 
 // Terrain colors for district nodes
 const TERRAIN_COLORS = {
-  volcanic: { primary: '#8b0000', secondary: '#ff4500', glow: '#ff6347' },
-  industrial: { primary: '#4a4a4a', secondary: '#8b4513', glow: '#cd853f' },
-  urban: { primary: '#2d1515', secondary: '#8b4513', glow: '#ffd700' },
-  docks: { primary: '#1a3a3a', secondary: '#4682b4', glow: '#5f9ea0' },
+  water: { primary: '#0a2040', secondary: '#2060a0', glow: '#4080c0' },
+  lava: { primary: '#8b1a1a', secondary: '#ff4500', glow: '#ff6347' },
   wasteland: { primary: '#3d2b1f', secondary: '#a0522d', glow: '#d2691e' },
+  mountain: { primary: '#3a3232', secondary: '#6a6060', glow: '#8a8080' },
 };
 
 // Job tooltip data (same as DistrictPanel)
@@ -451,12 +450,10 @@ function MapLegend() {
       <div className="legend-terrain">
         <h5>Terrain</h5>
         <div className="terrain-items">
-          <div className="terrain-item"><span className="terrain-color river"></span>River Styx</div>
-          <div className="terrain-item"><span className="terrain-color mountain"></span>Mountains</div>
-          <div className="terrain-item"><span className="terrain-color volcanic"></span>Volcanic</div>
-          <div className="terrain-item"><span className="terrain-color industrial"></span>Industrial</div>
-          <div className="terrain-item"><span className="terrain-color urban"></span>Urban</div>
-          <div className="terrain-item"><span className="terrain-color docks"></span>Docks</div>
+          <div className="terrain-item"><span className="terrain-color water"></span>Water</div>
+          <div className="terrain-item"><span className="terrain-color lava"></span>Lava</div>
+          <div className="terrain-item"><span className="terrain-color wasteland"></span>Wasteland</div>
+          <div className="terrain-item"><span className="terrain-color mountain"></span>Mountain</div>
         </div>
       </div>
     </div>
