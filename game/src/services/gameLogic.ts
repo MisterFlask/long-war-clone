@@ -101,113 +101,63 @@ function fractalNoise(x: number, y: number, seed: number, octaves: number = 4): 
   return value / maxValue;
 }
 
-// Generate the River Styx path
-function generateRiverPath(width: number, height: number, rand: () => number): boolean[][] {
-  const river: boolean[][] = Array(height).fill(null).map(() => Array(width).fill(false));
+// No longer generating river paths - using noise-based water regions instead
 
-  // River flows roughly from left to right with vertical meander
-  let y = Math.floor(height * 0.4 + rand() * height * 0.2);
-  const riverWidth = 2;
+// No longer generating separate mountain maps - using unified noise-based terrain
 
-  for (let x = 0; x < width; x++) {
-    // Meander the river
-    const meander = Math.sin(x * 0.15) * 4 + Math.sin(x * 0.08 + 2) * 3;
-    const targetY = Math.floor(height * 0.5 + meander);
-
-    // Gradually move toward target
-    if (y < targetY) y += rand() < 0.6 ? 1 : 0;
-    else if (y > targetY) y -= rand() < 0.6 ? 1 : 0;
-
-    // Mark river tiles
-    for (let dy = -riverWidth; dy <= riverWidth; dy++) {
-      const ny = clamp(y + dy, 0, height - 1);
-      river[ny][x] = true;
-    }
-  }
-
-  return river;
-}
-
-// Generate mountain ranges
-function generateMountains(width: number, height: number, seed: number): boolean[][] {
-  const mountains: boolean[][] = Array(height).fill(null).map(() => Array(width).fill(false));
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      // Mountains in corners and edges
-      const edgeDistX = Math.min(x, width - 1 - x) / width;
-      const edgeDistY = Math.min(y, height - 1 - y) / height;
-      const edgeFactor = Math.min(edgeDistX, edgeDistY) * 4;
-
-      const noiseVal = fractalNoise(x * 0.1, y * 0.1, seed + 5000, 3);
-
-      // More mountains near edges
-      if (noiseVal > 0.55 + edgeFactor * 0.3) {
-        mountains[y][x] = true;
-      }
-    }
-  }
-
-  return mountains;
-}
-
-// Determine terrain type for a tile based on noise and position
+// Determine terrain type for a tile based on noise
+// Creates distinct regions of water, lava, wasteland, and mountain
 function determineTileType(
   x: number,
   y: number,
   width: number,
   height: number,
-  seed: number,
-  riverMap: boolean[][],
-  mountainMap: boolean[][]
+  seed: number
 ): TileType {
-  // Check for river first
-  if (riverMap[y][x]) {
-    return 'river';
-  }
-
-  // Check for mountains
-  if (mountainMap[y][x]) {
-    return 'mountain';
-  }
-
   // Edge of map is void
   if (x === 0 || y === 0 || x === width - 1 || y === height - 1) {
     return 'void';
   }
 
-  // Use noise layers to determine terrain
-  const terrainNoise = fractalNoise(x * 0.08, y * 0.08, seed, 4);
-  const regionNoise = fractalNoise(x * 0.04, y * 0.04, seed + 1000, 2);
-  const detailNoise = fractalNoise(x * 0.2, y * 0.2, seed + 2000, 2);
+  // Use multiple noise layers to create distinct terrain regions
+  // Primary noise determines the main terrain type
+  const primaryNoise = fractalNoise(x * 0.06, y * 0.06, seed, 3);
+  // Secondary noise adds variation within regions
+  const secondaryNoise = fractalNoise(x * 0.12, y * 0.12, seed + 1000, 2);
+  // Edge factor - mountains more likely near edges
+  const edgeDistX = Math.min(x, width - 1 - x) / width;
+  const edgeDistY = Math.min(y, height - 1 - y) / height;
+  const edgeFactor = Math.min(edgeDistX, edgeDistY) * 4; // 0 at edges, ~1 at center
 
-  // Determine region type based on noise
-  if (regionNoise < 0.3) {
-    // Volcanic region
-    if (terrainNoise > 0.6) return 'volcanic';
-    return 'wasteland';
-  } else if (regionNoise < 0.5) {
-    // Industrial region
-    if (terrainNoise > 0.55) return 'industrial';
-    return 'ground';
-  } else if (regionNoise < 0.7) {
-    // Urban region
-    if (terrainNoise > 0.5) return 'urban';
-    return 'ground';
-  } else {
-    // Wasteland/docks region
-    // Near river = docks
-    let nearRiver = false;
-    for (let dy = -3; dy <= 3; dy++) {
-      for (let dx = -3; dx <= 3; dx++) {
-        const ny = clamp(y + dy, 0, height - 1);
-        const nx = clamp(x + dx, 0, width - 1);
-        if (riverMap[ny][nx]) nearRiver = true;
-      }
-    }
-    if (nearRiver && detailNoise > 0.4) return 'docks';
+  // Combine noises with edge factor for terrain determination
+  const terrainValue = primaryNoise + secondaryNoise * 0.3;
+
+  // Mountains at edges and in high-noise areas
+  if (edgeFactor < 0.3 && primaryNoise > 0.4) {
+    return 'mountain';
+  }
+  if (terrainValue > 0.85) {
+    return 'mountain';
+  }
+
+  // Use primary noise to divide into four terrain types
+  // Water: low noise values (deep areas)
+  if (terrainValue < 0.35) {
+    return 'water';
+  }
+
+  // Lava: medium-low noise values (volcanic zones)
+  if (terrainValue < 0.50) {
+    return 'lava';
+  }
+
+  // Wasteland: medium-high noise values (most common terrain)
+  if (terrainValue < 0.75) {
     return 'wasteland';
   }
+
+  // Mountain: high noise values
+  return 'mountain';
 }
 
 // Place districts on the tilemap
@@ -242,13 +192,11 @@ function placeDistricts(
       const x = Math.floor(zone.minX * width + rand() * (zone.maxX - zone.minX) * width);
       const y = Math.floor(zone.minY * height + rand() * (zone.maxY - zone.minY) * height);
 
-      // Check if position is valid (not river, mountain, or void, and not too close to other districts)
+      // Check if position is valid (prefer wasteland, avoid void)
       const tile = tiles[y]?.[x];
       const posKey = `${x},${y}`;
 
       if (tile &&
-          tile.type !== 'river' &&
-          tile.type !== 'mountain' &&
           tile.type !== 'void' &&
           !occupiedPositions.has(posKey)) {
 
@@ -268,18 +216,18 @@ function placeDistricts(
 
           // Mark the tile and surrounding area as the district's terrain type
           const template = DISTRICT_NAMES.find(d => d.name === district.name);
-          const districtTerrain = template?.terrain || 'ground';
+          const districtTerrain = template?.terrain || 'wasteland';
 
           // Set center tile
           tiles[y][x].districtId = district.id;
           tiles[y][x].type = districtTerrain as TileType;
 
-          // Set surrounding tiles
+          // Set surrounding tiles to match district terrain
           for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
               const ny = clamp(y + dy, 0, height - 1);
               const nx = clamp(x + dx, 0, width - 1);
-              if (tiles[ny][nx].type !== 'river' && tiles[ny][nx].type !== 'mountain') {
+              if (tiles[ny][nx].type !== 'void') {
                 tiles[ny][nx].type = districtTerrain as TileType;
               }
             }
@@ -307,11 +255,9 @@ function placeDistricts(
 function placeHQ(
   tiles: Tile[][],
   width: number,
-  height: number,
-  districtPositions: Map<string, { x: number; y: number }>,
-  rand: () => number
+  height: number
 ): { x: number; y: number } {
-  // HQ should be near center, away from river
+  // HQ should be near center, preferably on wasteland
   const centerX = Math.floor(width * 0.45);
   const centerY = Math.floor(height * 0.45);
 
@@ -324,9 +270,10 @@ function placeHQ(
         if (x < 1 || x >= width - 1 || y < 1 || y >= height - 1) continue;
 
         const tile = tiles[y][x];
-        if (tile.type !== 'river' && tile.type !== 'mountain' && tile.type !== 'void' && !tile.districtId) {
+        // Prefer wasteland for HQ, but accept any non-void, non-district tile
+        if (tile.type !== 'void' && !tile.districtId) {
           tiles[y][x].isHQ = true;
-          tiles[y][x].type = 'urban';
+          tiles[y][x].type = 'wasteland'; // HQ area becomes wasteland
           return { x, y };
         }
       }
@@ -356,11 +303,10 @@ function generateRoads(
       if (y < districtPos.y) y++;
       else if (y > districtPos.y) y--;
 
-      // Don't overwrite special tiles
+      // Don't overwrite special tiles or void
       const tile = tiles[y]?.[x];
       if (tile &&
-          tile.type !== 'river' &&
-          tile.type !== 'mountain' &&
+          tile.type !== 'void' &&
           !tile.districtId &&
           !tile.isHQ) {
         tiles[y][x].type = 'road';
@@ -377,17 +323,15 @@ export function generateTilemap(districts: District[], seed?: number): TileMap {
   const width = TILEMAP_WIDTH;
   const height = TILEMAP_HEIGHT;
 
-  // Generate base terrain features
-  const riverMap = generateRiverPath(width, height, rand);
-  const mountainMap = generateMountains(width, height, actualSeed);
-
-  // Create tiles array
+  // Create tiles array with procedurally generated terrain
   const tiles: Tile[][] = [];
 
   for (let y = 0; y < height; y++) {
     tiles[y] = [];
     for (let x = 0; x < width; x++) {
-      const type = determineTileType(x, y, width, height, actualSeed, riverMap, mountainMap);
+      // Determine terrain type using noise-based algorithm
+      const type = determineTileType(x, y, width, height, actualSeed);
+      // Elevation still used for visual brightness variation
       const elevation = fractalNoise(x * 0.1, y * 0.1, actualSeed + 3000, 2);
 
       tiles[y][x] = {
@@ -402,7 +346,7 @@ export function generateTilemap(districts: District[], seed?: number): TileMap {
   const districtPositions = placeDistricts(tiles, width, height, districts, rand);
 
   // Place HQ
-  const hqPosition = placeHQ(tiles, width, height, districtPositions, rand);
+  const hqPosition = placeHQ(tiles, width, height);
 
   // Generate roads
   generateRoads(tiles, hqPosition, districtPositions);

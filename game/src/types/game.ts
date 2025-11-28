@@ -310,7 +310,7 @@ export interface DistrictTemplate {
   description: string;
   mapPosition: MapCoordinates;
   // Visual properties for the map
-  terrain: 'volcanic' | 'industrial' | 'urban' | 'docks' | 'wasteland';
+  terrain: 'water' | 'lava' | 'wasteland' | 'mountain';
 }
 
 // District names pool with map coordinates
@@ -320,25 +320,25 @@ export const DISTRICT_NAMES: DistrictTemplate[] = [
     name: 'Char Market',
     description: 'A bustling bazaar where souls and goods exchange hands under perpetual smoke.',
     mapPosition: { x: 50, y: 20 },
-    terrain: 'urban'
+    terrain: 'wasteland'
   },
   {
     name: 'The Brass Warrens',
     description: 'A labyrinth of copper pipes and industrial forges, home to damned craftsmen.',
     mapPosition: { x: 80, y: 35 },
-    terrain: 'industrial'
+    terrain: 'lava'
   },
   {
     name: 'Ashfall Reach',
     description: 'Volcanic plains where the most valuable minerals are harvested.',
     mapPosition: { x: 85, y: 65 },
-    terrain: 'volcanic'
+    terrain: 'lava'
   },
   {
     name: 'The Gilded Pit',
     description: 'Where fallen merchants continue their dealings in tarnished luxury.',
     mapPosition: { x: 65, y: 80 },
-    terrain: 'urban'
+    terrain: 'wasteland'
   },
   {
     name: 'Sulphur Downs',
@@ -350,19 +350,19 @@ export const DISTRICT_NAMES: DistrictTemplate[] = [
     name: 'The Screaming Docks',
     description: 'A port on the River Styx where infernal cargo is loaded and unloaded.',
     mapPosition: { x: 15, y: 65 },
-    terrain: 'docks'
+    terrain: 'water'
   },
   {
     name: 'Cinder Row',
     description: 'Former residential district, now a smoldering ruin of opportunity.',
     mapPosition: { x: 20, y: 35 },
-    terrain: 'wasteland'
+    terrain: 'lava'
   },
   {
     name: 'The Iron Chancery',
     description: 'Administrative center where contracts are filed and fates are sealed.',
     mapPosition: { x: 55, y: 55 },
-    terrain: 'industrial'
+    terrain: 'mountain'
   },
 ];
 
@@ -417,14 +417,10 @@ export const MISSION_FLAVOR_TEXTS: Record<MissionType, string[]> = {
 
 // Tile types for the procedural world map
 export type TileType =
-  | 'void'           // Empty/impassable space
-  | 'ground'         // Basic traversable terrain
-  | 'volcanic'       // Lava/fire terrain
-  | 'industrial'     // Factories and forges
-  | 'urban'          // City/settlement areas
-  | 'docks'          // Water/port areas
-  | 'wasteland'      // Barren/desolate areas
-  | 'river'          // River Styx
+  | 'void'           // Empty/impassable space at edges
+  | 'water'          // Deep water/ocean areas
+  | 'lava'           // Molten lava flows
+  | 'wasteland'      // Barren/desolate terrain
   | 'mountain'       // Mountain/rocky terrain
   | 'road';          // Paths between districts
 
@@ -462,47 +458,28 @@ export const TILE_CONFIGS: Record<TileType, {
     colors: ['#0a0505', '#050202', '#080404', '#030101'],
     passable: false
   },
-  ground: {
-    colors: ['#1a0a0a', '#1d0c0c', '#180808', '#1f0e0e'],
-    passable: true
-  },
-  volcanic: {
-    colors: ['#4a1515', '#5c1a1a', '#3d1010', '#6b2020'],
-    symbol: '~',
-    passable: true
-  },
-  industrial: {
-    colors: ['#2a2520', '#322d28', '#252018', '#3a352f'],
-    symbol: '#',
-    passable: true
-  },
-  urban: {
-    colors: ['#201818', '#281e1e', '#1a1212', '#302424'],
-    symbol: '+',
-    passable: true
-  },
-  docks: {
-    colors: ['#101820', '#142028', '#0c1218', '#182838'],
-    symbol: '=',
-    passable: true
-  },
-  wasteland: {
-    colors: ['#251a12', '#2d1f16', '#1f150d', '#352518'],
-    symbol: '.',
-    passable: true
-  },
-  river: {
-    colors: ['#0a1020', '#0c1428', '#081018', '#0e1830'],
+  water: {
+    colors: ['#0a1830', '#0c2040', '#081428', '#0e2448'],
     symbol: '≈',
     passable: false
   },
+  lava: {
+    colors: ['#8b1a1a', '#a52020', '#6b1010', '#c03030'],
+    symbol: '~',
+    passable: false
+  },
+  wasteland: {
+    colors: ['#3d2b1f', '#4a3525', '#302018', '#5a4530'],
+    symbol: '.',
+    passable: true
+  },
   mountain: {
-    colors: ['#1a1515', '#221c1c', '#151010', '#2a2222'],
+    colors: ['#2a2525', '#3a3232', '#1a1515', '#4a4040'],
     symbol: '^',
     passable: false
   },
   road: {
-    colors: ['#252015', '#2d2518', '#201a10', '#352d1d'],
+    colors: ['#4a4035', '#5a5045', '#3a3025', '#6a6055'],
     symbol: '·',
     passable: true
   },

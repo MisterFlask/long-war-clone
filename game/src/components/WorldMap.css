@@ -81,47 +81,51 @@
   background: #030101 !important;
 }
 
-.tile-river {
-  background: linear-gradient(135deg, #0a1020, #0c1428) !important;
-  animation: river-shimmer 4s ease-in-out infinite;
+.tile-water {
+  background: linear-gradient(135deg, #0a1830, #0e2448) !important;
+  animation: water-shimmer 4s ease-in-out infinite;
 }
 
-@keyframes river-shimmer {
+@keyframes water-shimmer {
   0%, 100% { filter: brightness(0.9); }
   50% { filter: brightness(1.1); }
 }
 
-.tile-river .tile-symbol {
+.tile-water .tile-symbol {
   color: rgba(100, 150, 200, 0.3);
-  animation: river-flow 2s linear infinite;
+  animation: water-flow 2s linear infinite;
 }
 
-@keyframes river-flow {
+@keyframes water-flow {
   0% { transform: translateX(-2px); }
   50% { transform: translateX(2px); }
   100% { transform: translateX(-2px); }
 }
 
+.tile-lava {
+  animation: lava-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes lava-glow {
+  0% { filter: brightness(0.9); }
+  100% { filter: brightness(1.2); }
+}
+
+.tile-lava .tile-symbol {
+  color: rgba(255, 100, 50, 0.4);
+}
+
+.tile-wasteland .tile-symbol {
+  color: rgba(160, 82, 45, 0.3);
+}
+
 .tile-mountain {
-  background: linear-gradient(180deg, #2a2222, #1a1515) !important;
+  background: linear-gradient(180deg, #2a2525, #4a4040) !important;
 }
 
 .tile-mountain .tile-symbol {
   color: rgba(100, 80, 60, 0.4);
   font-size: 12px;
-}
-
-.tile-volcanic {
-  animation: volcanic-glow 3s ease-in-out infinite alternate;
-}
-
-@keyframes volcanic-glow {
-  0% { filter: brightness(0.9); }
-  100% { filter: brightness(1.1); }
-}
-
-.tile-volcanic .tile-symbol {
-  color: rgba(255, 100, 50, 0.3);
 }
 
 .tile-district {
@@ -130,7 +134,7 @@
 
 .tile-hq {
   border: 1px solid rgba(255, 215, 0, 0.5);
-  background: #201818 !important;
+  background: #3d2b1f !important;
 }
 
 /* ==================== DISTRICT NODE STYLES ==================== */
@@ -510,34 +514,24 @@
   border-radius: 2px;
 }
 
-.terrain-color.river {
-  background: linear-gradient(135deg, #0a1020, #0c1428);
-  border: 1px solid #182838;
+.terrain-color.water {
+  background: linear-gradient(135deg, #0a1830, #0e2448);
+  border: 1px solid #2060a0;
+}
+
+.terrain-color.lava {
+  background: linear-gradient(135deg, #8b1a1a, #c03030);
+  border: 1px solid #ff4500;
+}
+
+.terrain-color.wasteland {
+  background: linear-gradient(135deg, #3d2b1f, #5a4530);
+  border: 1px solid #a0522d;
 }
 
 .terrain-color.mountain {
-  background: linear-gradient(180deg, #2a2222, #1a1515);
-  border: 1px solid #3a3030;
-}
-
-.terrain-color.volcanic {
-  background: linear-gradient(135deg, #4a1515, #6b2020);
-  border: 1px solid #8b2020;
-}
-
-.terrain-color.industrial {
-  background: linear-gradient(135deg, #2a2520, #3a352f);
-  border: 1px solid #4a453f;
-}
-
-.terrain-color.urban {
-  background: linear-gradient(135deg, #201818, #302424);
-  border: 1px solid #403030;
-}
-
-.terrain-color.docks {
-  background: linear-gradient(135deg, #101820, #182838);
-  border: 1px solid #203040;
+  background: linear-gradient(180deg, #2a2525, #4a4040);
+  border: 1px solid #6a6060;
 }
 
 /* ==================== DISTRICT DETAIL PANEL ==================== */
@@ -614,34 +608,28 @@
   text-transform: capitalize;
 }
 
-.terrain-type.volcanic {
-  background: rgba(139, 0, 0, 0.3);
+.terrain-type.water {
+  background: rgba(10, 48, 100, 0.3);
+  color: #4080c0;
+  border: 1px solid #4080c0;
+}
+
+.terrain-type.lava {
+  background: rgba(139, 26, 26, 0.3);
   color: #ff4500;
   border: 1px solid #ff4500;
-}
-
-.terrain-type.industrial {
-  background: rgba(139, 69, 19, 0.3);
-  color: #cd853f;
-  border: 1px solid #cd853f;
-}
-
-.terrain-type.urban {
-  background: rgba(139, 69, 19, 0.3);
-  color: #ffd700;
-  border: 1px solid #ffd700;
-}
-
-.terrain-type.docks {
-  background: rgba(70, 130, 180, 0.3);
-  color: #5f9ea0;
-  border: 1px solid #5f9ea0;
 }
 
 .terrain-type.wasteland {
   background: rgba(160, 82, 45, 0.3);
   color: #d2691e;
   border: 1px solid #d2691e;
+}
+
+.terrain-type.mountain {
+  background: rgba(60, 50, 50, 0.3);
+  color: #8a8080;
+  border: 1px solid #8a8080;
 }
 
 .detail-stats {
