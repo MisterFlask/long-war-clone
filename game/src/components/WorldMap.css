@@ -1,4 +1,4 @@
-/* World Map Styles */
+/* World Map Styles - Tilemap Version */
 
 .world-map-container {
   padding: 1rem;
@@ -19,78 +19,276 @@
   position: relative;
   flex: 1;
   min-height: 500px;
-  background: linear-gradient(180deg, #0d0505 0%, #1a0a0a 100%);
+  background: #0a0505;
   border: 2px solid #8b4513;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: auto;
 }
 
-.world-map-svg {
+/* ==================== TILEMAP STYLES ==================== */
+
+.tilemap-container {
+  position: relative;
+  min-width: fit-content;
+  min-height: fit-content;
+}
+
+.tilemap-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  cursor: pointer;
-}
-
-/* River Styx animation */
-.river-styx {
-  animation: river-flow 20s linear infinite;
-}
-
-@keyframes river-flow {
-  0% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: 200;
-  }
-}
-
-/* District node styles */
-.district-node {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.district-node:hover {
-  filter: brightness(1.2);
-}
-
-.district-node.selected .node-main {
-  filter: drop-shadow(0 0 10px #ffd700);
-}
-
-.district-node .node-glow {
-  transition: opacity 0.3s ease;
-}
-
-.district-node:hover .node-glow {
-  opacity: 0.7;
-}
-
-.district-node .node-main {
-  transition: stroke-width 0.2s ease;
-}
-
-.district-label {
-  font-family: 'Georgia', serif;
-  font-size: 14px;
-  font-weight: bold;
-  text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
   pointer-events: none;
 }
 
+.tiles-layer {
+  z-index: 1;
+}
+
+.paths-layer {
+  z-index: 2;
+}
+
+.entities-layer {
+  z-index: 3;
+}
+
+.districts-layer {
+  z-index: 4;
+  pointer-events: auto;
+}
+
+/* Individual tile styles */
+.tile {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.2s ease;
+}
+
+.tile-symbol {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.15);
+  font-family: monospace;
+  user-select: none;
+}
+
+/* Tile type specific styles */
+.tile-void {
+  background: #030101 !important;
+}
+
+.tile-river {
+  background: linear-gradient(135deg, #0a1020, #0c1428) !important;
+  animation: river-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes river-shimmer {
+  0%, 100% { filter: brightness(0.9); }
+  50% { filter: brightness(1.1); }
+}
+
+.tile-river .tile-symbol {
+  color: rgba(100, 150, 200, 0.3);
+  animation: river-flow 2s linear infinite;
+}
+
+@keyframes river-flow {
+  0% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(-2px); }
+}
+
+.tile-mountain {
+  background: linear-gradient(180deg, #2a2222, #1a1515) !important;
+}
+
+.tile-mountain .tile-symbol {
+  color: rgba(100, 80, 60, 0.4);
+  font-size: 12px;
+}
+
+.tile-volcanic {
+  animation: volcanic-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes volcanic-glow {
+  0% { filter: brightness(0.9); }
+  100% { filter: brightness(1.1); }
+}
+
+.tile-volcanic .tile-symbol {
+  color: rgba(255, 100, 50, 0.3);
+}
+
+.tile-district {
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.tile-hq {
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: #201818 !important;
+}
+
+/* ==================== DISTRICT NODE STYLES ==================== */
+
+.district-node-container {
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  pointer-events: auto;
+}
+
+.district-node-container:hover {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.district-node-container.selected {
+  z-index: 10;
+}
+
+.node-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.district-node-container:hover .node-glow {
+  opacity: 0.7;
+}
+
+.district-node-container.selected .node-glow {
+  opacity: 0.8;
+}
+
+.district-node-container.danger .node-glow {
+  border-color: #dc143c !important;
+  animation: glow-danger 1s ease-in-out infinite;
+}
+
+.district-node-container.warning .node-glow {
+  border-color: #ffa500 !important;
+}
+
+@keyframes glow-danger {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+
+.danger-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid #dc143c;
+  animation: danger-expand 1.5s ease-out infinite;
+}
+
+@keyframes danger-expand {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+.node-main {
+  position: relative;
+  border-radius: 50%;
+  border-style: solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: border-width 0.2s ease, box-shadow 0.2s ease;
+}
+
+.district-node-container.selected .node-main {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
 .unrevealed-indicator {
+  font-size: 18px;
   font-weight: bold;
+  color: #888;
   text-shadow: 1px 1px 2px #000;
 }
 
-.mini-stats text {
+.mini-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   font-family: 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1.2;
   text-shadow: 1px 1px 2px #000;
 }
 
-/* Worker badge animation */
-.worker-badge circle {
+.stat-dominion {
+  color: #32cd32;
+  font-weight: bold;
+}
+
+.stat-notice {
+  color: #ffd700;
+  font-size: 9px;
+}
+
+.stat-notice.danger {
+  color: #dc143c;
+}
+
+.stat-notice.warning {
+  color: #ffa500;
+}
+
+.district-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  font-family: 'Georgia', serif;
+  font-size: 11px;
+  font-weight: bold;
+  color: #f0e6d2;
+  text-shadow: 1px 1px 3px #000, -1px -1px 3px #000;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.district-node-container.selected .district-label {
+  color: #ffd700;
+}
+
+.worker-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  background: #228b22;
+  border: 2px solid #f0e6d2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
   animation: badge-pulse 2s ease-in-out infinite;
 }
 
@@ -99,112 +297,124 @@
   50% { opacity: 0.7; }
 }
 
-/* Mission badge animation */
-.mission-badge .mission-pulse {
+.mission-badge {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 18px;
+  height: 18px;
+  background: #b8860b;
+  border: 2px solid #ffd700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
   animation: mission-glow 1.5s ease-in-out infinite;
 }
 
 @keyframes mission-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 2px #ffd700);
-  }
-  50% {
-    filter: drop-shadow(0 0 8px #ffd700);
-  }
+  0%, 100% { box-shadow: 0 0 3px #ffd700; }
+  50% { box-shadow: 0 0 10px #ffd700; }
 }
 
-/* Danger pulse for high-notice districts */
-.danger-pulse {
-  animation: danger-expand 1.5s ease-out infinite;
-}
+/* ==================== HQ NODE STYLES ==================== */
 
-@keyframes danger-expand {
-  0% {
-    opacity: 0.8;
-    r: 50;
-  }
-  100% {
-    opacity: 0;
-    r: 80;
-  }
-}
-
-.node-glow.danger {
-  stroke: #dc143c !important;
-  animation: glow-danger 1s ease-in-out infinite;
-}
-
-.node-glow.warning {
-  stroke: #ffa500 !important;
-}
-
-@keyframes glow-danger {
-  0%, 100% { opacity: 0.5; stroke-width: 2; }
-  50% { opacity: 0.9; stroke-width: 4; }
-}
-
-/* HQ node */
-.hq-node {
+.hq-node-container {
+  position: absolute;
+  pointer-events: none;
   filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
 }
 
-.hq-node text {
+.hq-building {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(180deg, #ffd700 0%, #8b4513 100%);
+  clip-path: polygon(50% 0%, 100% 35%, 100% 100%, 0% 100%, 0% 35%);
+  border: 2px solid #ffd700;
+}
+
+.hq-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 5px;
   font-family: 'Georgia', serif;
+  font-size: 10px;
+  font-weight: bold;
+  color: #ffd700;
   text-shadow: 1px 1px 2px #000;
+  white-space: nowrap;
 }
 
-/* Mission path styles */
+/* ==================== MISSION PATH STYLES ==================== */
+
 .mission-path {
+  position: absolute;
+  height: 3px;
   pointer-events: none;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
 }
 
-.path-animated {
-  stroke-dasharray: 10, 5;
-  animation: dash-move 1s linear infinite;
+.mission-path.dashed {
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor,
+    currentColor 8px,
+    transparent 8px,
+    transparent 14px
+  ) !important;
+  background-size: 14px 3px !important;
 }
 
-@keyframes dash-move {
-  0% {
-    stroke-dashoffset: 0;
-  }
-  100% {
-    stroke-dashoffset: -15;
-  }
+.mission-path.animated {
+  background: repeating-linear-gradient(
+    90deg,
+    currentColor,
+    currentColor 8px,
+    transparent 8px,
+    transparent 14px
+  ) !important;
+  animation: path-dash 0.5s linear infinite;
+}
+
+@keyframes path-dash {
+  0% { background-position: 0 0; }
+  100% { background-position: 14px 0; }
 }
 
 .agent-marker {
-  animation: agent-move 2s ease-in-out infinite alternate;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #f0e6d2;
+  animation: agent-pulse 2s ease-in-out infinite alternate;
 }
 
-@keyframes agent-move {
-  0% { opacity: 0.7; }
-  100% { opacity: 1; }
+@keyframes agent-pulse {
+  0% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.9); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
 
-/* Background elements */
-.background-flames ellipse {
-  animation: flame-flicker 3s ease-in-out infinite alternate;
-}
+/* ==================== MAP LEGEND ==================== */
 
-@keyframes flame-flicker {
-  0% { opacity: 0.2; }
-  100% { opacity: 0.4; }
-}
-
-.mountains {
-  pointer-events: none;
-}
-
-/* Map Legend */
 .map-legend {
   position: absolute;
   bottom: 1rem;
   left: 1rem;
-  background: rgba(13, 5, 5, 0.9);
+  background: rgba(13, 5, 5, 0.95);
   border: 1px solid #8b4513;
   border-radius: 6px;
   padding: 0.75rem;
   min-width: 150px;
+  z-index: 100;
 }
 
 .map-legend h4 {
@@ -267,7 +477,71 @@
   box-shadow: 0 0 5px #dc143c;
 }
 
-/* District Detail Panel */
+.legend-terrain {
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #4a3728;
+}
+
+.legend-terrain h5 {
+  color: #b8860b;
+  margin: 0 0 0.4rem 0;
+  font-size: 0.75rem;
+  font-family: 'Georgia', serif;
+}
+
+.terrain-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.terrain-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: #ccc;
+}
+
+.terrain-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+.terrain-color.river {
+  background: linear-gradient(135deg, #0a1020, #0c1428);
+  border: 1px solid #182838;
+}
+
+.terrain-color.mountain {
+  background: linear-gradient(180deg, #2a2222, #1a1515);
+  border: 1px solid #3a3030;
+}
+
+.terrain-color.volcanic {
+  background: linear-gradient(135deg, #4a1515, #6b2020);
+  border: 1px solid #8b2020;
+}
+
+.terrain-color.industrial {
+  background: linear-gradient(135deg, #2a2520, #3a352f);
+  border: 1px solid #4a453f;
+}
+
+.terrain-color.urban {
+  background: linear-gradient(135deg, #201818, #302424);
+  border: 1px solid #403030;
+}
+
+.terrain-color.docks {
+  background: linear-gradient(135deg, #101820, #182838);
+  border: 1px solid #203040;
+}
+
+/* ==================== DISTRICT DETAIL PANEL ==================== */
+
 .district-detail-panel {
   position: absolute;
   top: 1rem;
@@ -280,6 +554,7 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   max-height: calc(100% - 2rem);
   overflow-y: auto;
+  z-index: 100;
 }
 
 .detail-header {
@@ -515,7 +790,8 @@
   color: #a0522d;
 }
 
-/* Responsive adjustments */
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
 @media (max-width: 900px) {
   .district-detail-panel {
     width: 250px;

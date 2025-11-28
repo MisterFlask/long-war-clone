@@ -163,6 +163,9 @@ export interface GameState {
 
   // Message log
   messages: string[];
+
+  // Tilemap for world map (procedurally generated)
+  tilemap: TileMap;
 }
 
 // Mission type configuration
@@ -408,6 +411,101 @@ export const MISSION_FLAVOR_TEXTS: Record<MissionType, string[]> = {
     'An intermediary has offered to facilitate peace offerings.',
     'Political shifts have made certain officials receptive to gifts.',
   ],
+};
+
+// ==================== TILEMAP TYPES ====================
+
+// Tile types for the procedural world map
+export type TileType =
+  | 'void'           // Empty/impassable space
+  | 'ground'         // Basic traversable terrain
+  | 'volcanic'       // Lava/fire terrain
+  | 'industrial'     // Factories and forges
+  | 'urban'          // City/settlement areas
+  | 'docks'          // Water/port areas
+  | 'wasteland'      // Barren/desolate areas
+  | 'river'          // River Styx
+  | 'mountain'       // Mountain/rocky terrain
+  | 'road';          // Paths between districts
+
+// A single tile in the tilemap
+export interface Tile {
+  type: TileType;
+  elevation: number;    // 0-1, used for visual effects
+  variant: number;      // 0-3, for tile visual variety
+  districtId?: string;  // If this tile is the center of a district
+  isHQ?: boolean;       // If this is the company HQ location
+}
+
+// Tilemap dimensions
+export const TILEMAP_WIDTH = 40;
+export const TILEMAP_HEIGHT = 28;
+export const TILE_SIZE = 25; // pixels per tile in rendering
+
+// Tilemap structure
+export interface TileMap {
+  tiles: Tile[][];      // 2D array [y][x]
+  width: number;
+  height: number;
+  seed: number;         // Seed used for generation
+  districtPositions: Map<string, { x: number; y: number }>; // Grid positions of districts
+  hqPosition: { x: number; y: number };
+}
+
+// Tile visual configuration
+export const TILE_CONFIGS: Record<TileType, {
+  colors: string[];
+  symbol?: string;
+  passable: boolean;
+}> = {
+  void: {
+    colors: ['#0a0505', '#050202', '#080404', '#030101'],
+    passable: false
+  },
+  ground: {
+    colors: ['#1a0a0a', '#1d0c0c', '#180808', '#1f0e0e'],
+    passable: true
+  },
+  volcanic: {
+    colors: ['#4a1515', '#5c1a1a', '#3d1010', '#6b2020'],
+    symbol: '~',
+    passable: true
+  },
+  industrial: {
+    colors: ['#2a2520', '#322d28', '#252018', '#3a352f'],
+    symbol: '#',
+    passable: true
+  },
+  urban: {
+    colors: ['#201818', '#281e1e', '#1a1212', '#302424'],
+    symbol: '+',
+    passable: true
+  },
+  docks: {
+    colors: ['#101820', '#142028', '#0c1218', '#182838'],
+    symbol: '=',
+    passable: true
+  },
+  wasteland: {
+    colors: ['#251a12', '#2d1f16', '#1f150d', '#352518'],
+    symbol: '.',
+    passable: true
+  },
+  river: {
+    colors: ['#0a1020', '#0c1428', '#081018', '#0e1830'],
+    symbol: '≈',
+    passable: false
+  },
+  mountain: {
+    colors: ['#1a1515', '#221c1c', '#151010', '#2a2222'],
+    symbol: '^',
+    passable: false
+  },
+  road: {
+    colors: ['#252015', '#2d2518', '#201a10', '#352d1d'],
+    symbol: '·',
+    passable: true
+  },
 };
 
 // Agent name pools
