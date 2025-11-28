@@ -1,15 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useGame, useGameActions } from '../context/GameContext';
-import type { District, WorkerJob, Mission } from '../types/game';
-import { JOB_CONFIGS, getDistrictTemplate, HQ_POSITION } from '../types/game';
+import type { District, WorkerJob, Mission, Tile } from '../types/game';
+import { JOB_CONFIGS, TILE_CONFIGS, TILE_SIZE, getDistrictTemplate } from '../types/game';
 import { Tooltip, TooltipContent } from './Tooltip';
 import './WorldMap.css';
 
-// SVG dimensions (viewBox)
-const MAP_WIDTH = 1000;
-const MAP_HEIGHT = 700;
-
-// Terrain icons/patterns for different district types
+// Terrain colors for district nodes
 const TERRAIN_COLORS = {
   volcanic: { primary: '#8b0000', secondary: '#ff4500', glow: '#ff6347' },
   industrial: { primary: '#4a4a4a', secondary: '#8b4513', glow: '#cd853f' },
@@ -79,29 +75,64 @@ const JOB_TOOLTIP_DATA: Record<WorkerJob, { title: string; description: string; 
   },
 };
 
+// Single tile rendering component
+interface TileRendererProps {
+  tile: Tile;
+  x: number;
+  y: number;
+  isDistrictTile: boolean;
+  isHQTile: boolean;
+}
+
+function TileRenderer({ tile, x, y, isDistrictTile, isHQTile }: TileRendererProps) {
+  const config = TILE_CONFIGS[tile.type];
+  const color = config.colors[tile.variant % config.colors.length];
+
+  // Add slight brightness variation based on elevation
+  const brightness = 0.9 + tile.elevation * 0.2;
+
+  return (
+    <div
+      className={`tile tile-${tile.type} ${isDistrictTile ? 'tile-district' : ''} ${isHQTile ? 'tile-hq' : ''}`}
+      style={{
+        left: x * TILE_SIZE,
+        top: y * TILE_SIZE,
+        width: TILE_SIZE,
+        height: TILE_SIZE,
+        backgroundColor: color,
+        filter: `brightness(${brightness})`,
+      }}
+    >
+      {config.symbol && !isDistrictTile && !isHQTile && (
+        <span className="tile-symbol">{config.symbol}</span>
+      )}
+    </div>
+  );
+}
+
 interface DistrictNodeProps {
   district: District;
   isSelected: boolean;
   onSelect: () => void;
   workersAssigned: number;
   activeMissions: Mission[];
+  position: { x: number; y: number };
 }
 
-function DistrictNode({ district, isSelected, onSelect, workersAssigned, activeMissions }: DistrictNodeProps) {
+function DistrictNode({ district, isSelected, onSelect, workersAssigned, activeMissions, position }: DistrictNodeProps) {
   const template = getDistrictTemplate(district.name);
   if (!template) return null;
 
-  const { x, y } = template.mapPosition;
   const terrain = template.terrain;
   const colors = TERRAIN_COLORS[terrain];
 
-  // Convert percentage to actual coordinates
-  const cx = (x / 100) * MAP_WIDTH;
-  const cy = (y / 100) * MAP_HEIGHT;
+  // Position in pixels (centered on the tile)
+  const cx = position.x * TILE_SIZE + TILE_SIZE / 2;
+  const cy = position.y * TILE_SIZE + TILE_SIZE / 2;
 
   // Node size based on dominion (larger = more control)
-  const baseSize = 35;
-  const dominionBonus = district.revealed ? district.companyDominion * 2 : 0;
+  const baseSize = 28;
+  const dominionBonus = district.revealed ? district.companyDominion * 1.5 : 0;
   const nodeSize = baseSize + dominionBonus;
 
   // Notice affects the pulsing danger indicator
@@ -112,214 +143,103 @@ function DistrictNode({ district, isSelected, onSelect, workersAssigned, activeM
   const hasMission = activeMissions.length > 0;
 
   return (
-    <g className={`district-node ${isSelected ? 'selected' : ''}`} onClick={onSelect}>
+    <div
+      className={`district-node-container ${isSelected ? 'selected' : ''} ${isDanger ? 'danger' : ''} ${isWarning ? 'warning' : ''}`}
+      style={{
+        left: cx,
+        top: cy,
+        transform: 'translate(-50%, -50%)',
+      }}
+      onClick={onSelect}
+    >
       {/* Outer glow ring */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={nodeSize + 15}
-        className={`node-glow ${isDanger ? 'danger' : isWarning ? 'warning' : ''}`}
-        fill="none"
-        stroke={colors.glow}
-        strokeWidth="2"
-        opacity={isSelected ? 0.8 : 0.3}
+      <div
+        className="node-glow"
+        style={{
+          width: nodeSize + 20,
+          height: nodeSize + 20,
+          borderColor: isDanger ? '#dc143c' : isWarning ? '#ffa500' : colors.glow,
+        }}
       />
 
       {/* Danger pulse effect */}
-      {isDanger && (
-        <circle
-          cx={cx}
-          cy={cy}
-          r={nodeSize + 25}
-          className="danger-pulse"
-          fill="none"
-          stroke="#dc143c"
-          strokeWidth="3"
-        />
-      )}
+      {isDanger && <div className="danger-pulse" style={{ width: nodeSize + 30, height: nodeSize + 30 }} />}
 
       {/* Main district circle */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={nodeSize}
+      <div
         className="node-main"
-        fill={`url(#terrain-${terrain})`}
-        stroke={isSelected ? '#ffd700' : colors.secondary}
-        strokeWidth={isSelected ? 4 : 2}
-      />
+        style={{
+          width: nodeSize,
+          height: nodeSize,
+          background: `radial-gradient(circle, ${colors.secondary}, ${colors.primary})`,
+          borderColor: isSelected ? '#ffd700' : colors.secondary,
+          borderWidth: isSelected ? 3 : 2,
+        }}
+      >
+        {/* Unrevealed indicator */}
+        {!district.revealed && <span className="unrevealed-indicator">?</span>}
 
-      {/* Inner detail circle */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={nodeSize * 0.6}
-        fill={colors.primary}
-        opacity="0.5"
-      />
+        {/* Revealed stats mini-display */}
+        {district.revealed && (
+          <div className="mini-stats">
+            <span className="stat-dominion">D:{district.companyDominion}</span>
+            <span className={`stat-notice ${isDanger ? 'danger' : isWarning ? 'warning' : ''}`}>
+              N:{district.notice}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* District name label */}
-      <text
-        x={cx}
-        y={cy + nodeSize + 20}
-        className="district-label"
-        textAnchor="middle"
-        fill={isSelected ? '#ffd700' : '#f0e6d2'}
-      >
-        {district.name}
-      </text>
-
-      {/* Unrevealed indicator */}
-      {!district.revealed && (
-        <text
-          x={cx}
-          y={cy + 5}
-          className="unrevealed-indicator"
-          textAnchor="middle"
-          fill="#888"
-          fontSize="24"
-        >
-          ?
-        </text>
-      )}
-
-      {/* Revealed stats mini-display */}
-      {district.revealed && (
-        <g className="mini-stats">
-          {/* Dominion indicator */}
-          <text
-            x={cx}
-            y={cy - 5}
-            textAnchor="middle"
-            fill="#32cd32"
-            fontSize="14"
-            fontWeight="bold"
-          >
-            D:{district.companyDominion}
-          </text>
-          {/* Notice indicator */}
-          <text
-            x={cx}
-            y={cy + 12}
-            textAnchor="middle"
-            fill={isDanger ? '#dc143c' : isWarning ? '#ffa500' : '#ffd700'}
-            fontSize="12"
-          >
-            N:{district.notice}
-          </text>
-        </g>
-      )}
+      <div className="district-label">{district.name}</div>
 
       {/* Workers assigned badge */}
       {workersAssigned > 0 && (
-        <g className="worker-badge">
-          <circle
-            cx={cx + nodeSize - 5}
-            cy={cy - nodeSize + 5}
-            r="12"
-            fill="#228b22"
-            stroke="#f0e6d2"
-            strokeWidth="2"
-          />
-          <text
-            x={cx + nodeSize - 5}
-            y={cy - nodeSize + 10}
-            textAnchor="middle"
-            fill="#fff"
-            fontSize="12"
-            fontWeight="bold"
-          >
-            {workersAssigned}
-          </text>
-        </g>
+        <div className="worker-badge">
+          {workersAssigned}
+        </div>
       )}
 
       {/* Mission indicator */}
       {hasMission && (
-        <g className="mission-badge">
-          <circle
-            cx={cx - nodeSize + 5}
-            cy={cy - nodeSize + 5}
-            r="10"
-            fill="#b8860b"
-            stroke="#ffd700"
-            strokeWidth="2"
-            className="mission-pulse"
-          />
-          <text
-            x={cx - nodeSize + 5}
-            y={cy - nodeSize + 9}
-            textAnchor="middle"
-            fill="#fff"
-            fontSize="10"
-            fontWeight="bold"
-          >
-            M
-          </text>
-        </g>
+        <div className="mission-badge">M</div>
       )}
-    </g>
+    </div>
   );
 }
 
 // HQ Node component
-function HQNode() {
-  const cx = (HQ_POSITION.x / 100) * MAP_WIDTH;
-  const cy = (HQ_POSITION.y / 100) * MAP_HEIGHT;
+function HQNode({ position }: { position: { x: number; y: number } }) {
+  const cx = position.x * TILE_SIZE + TILE_SIZE / 2;
+  const cy = position.y * TILE_SIZE + TILE_SIZE / 2;
 
   return (
-    <g className="hq-node">
-      {/* HQ building shape */}
-      <polygon
-        points={`${cx},${cy - 25} ${cx + 20},${cy + 15} ${cx - 20},${cy + 15}`}
-        fill="url(#hq-gradient)"
-        stroke="#ffd700"
-        strokeWidth="3"
-      />
-      <rect
-        x={cx - 15}
-        y={cy - 5}
-        width="30"
-        height="20"
-        fill="#2d1515"
-        stroke="#8b4513"
-        strokeWidth="2"
-      />
-      {/* HQ label */}
-      <text
-        x={cx}
-        y={cy + 35}
-        textAnchor="middle"
-        fill="#ffd700"
-        fontSize="12"
-        fontWeight="bold"
-      >
-        Company HQ
-      </text>
-    </g>
+    <div
+      className="hq-node-container"
+      style={{
+        left: cx,
+        top: cy,
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
+      <div className="hq-building" />
+      <div className="hq-label">Company HQ</div>
+    </div>
   );
 }
 
 // Mission path line from HQ to district
 interface MissionPathProps {
   mission: Mission;
-  targetDistrict: District;
+  hqPosition: { x: number; y: number };
+  districtPosition: { x: number; y: number };
 }
 
-function MissionPath({ mission, targetDistrict }: MissionPathProps) {
-  const template = getDistrictTemplate(targetDistrict.name);
-  if (!template) return null;
-
-  const startX = (HQ_POSITION.x / 100) * MAP_WIDTH;
-  const startY = (HQ_POSITION.y / 100) * MAP_HEIGHT;
-  const endX = (template.mapPosition.x / 100) * MAP_WIDTH;
-  const endY = (template.mapPosition.y / 100) * MAP_HEIGHT;
-
-  // Create a curved path
-  const midX = (startX + endX) / 2;
-  const midY = (startY + endY) / 2 - 30; // Curve upward
-
-  const pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
+function MissionPath({ mission, hqPosition, districtPosition }: MissionPathProps) {
+  const startX = hqPosition.x * TILE_SIZE + TILE_SIZE / 2;
+  const startY = hqPosition.y * TILE_SIZE + TILE_SIZE / 2;
+  const endX = districtPosition.x * TILE_SIZE + TILE_SIZE / 2;
+  const endY = districtPosition.y * TILE_SIZE + TILE_SIZE / 2;
 
   // Color based on mission status
   const statusColors = {
@@ -329,40 +249,37 @@ function MissionPath({ mission, targetDistrict }: MissionPathProps) {
     failed: '#dc143c',
   };
 
+  const color = statusColors[mission.status];
+  const isDashed = mission.status === 'preparing';
+  const isAnimated = mission.status === 'in_progress';
+
+  // Calculate line length and angle
+  const dx = endX - startX;
+  const dy = endY - startY;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
   return (
-    <g className="mission-path">
-      {/* Path shadow */}
-      <path
-        d={pathD}
-        fill="none"
-        stroke="#000"
-        strokeWidth="6"
-        opacity="0.3"
-      />
-      {/* Main path */}
-      <path
-        d={pathD}
-        fill="none"
-        stroke={statusColors[mission.status]}
-        strokeWidth="3"
-        strokeDasharray={mission.status === 'preparing' ? '10,5' : 'none'}
-        className={mission.status === 'in_progress' ? 'path-animated' : ''}
-      />
-      {/* Agent icons on path */}
+    <div
+      className={`mission-path ${isDashed ? 'dashed' : ''} ${isAnimated ? 'animated' : ''}`}
+      style={{
+        left: startX,
+        top: startY,
+        width: length,
+        backgroundColor: color,
+        transform: `rotate(${angle}deg)`,
+        transformOrigin: '0 50%',
+      }}
+    >
+      {/* Agent marker at midpoint */}
       {mission.assignedAgents.length > 0 && (
-        <circle
-          cx={midX}
-          cy={midY}
-          r="8"
-          fill={statusColors[mission.status]}
-          stroke="#f0e6d2"
-          strokeWidth="2"
+        <div
           className="agent-marker"
-        >
-          <title>{mission.assignedAgents.length} agent(s) deployed</title>
-        </circle>
+          style={{ backgroundColor: color }}
+          title={`${mission.assignedAgents.length} agent(s) deployed`}
+        />
       )}
-    </g>
+    </div>
   );
 }
 
@@ -531,6 +448,17 @@ function MapLegend() {
           <span>High Notice (7+)</span>
         </div>
       </div>
+      <div className="legend-terrain">
+        <h5>Terrain</h5>
+        <div className="terrain-items">
+          <div className="terrain-item"><span className="terrain-color river"></span>River Styx</div>
+          <div className="terrain-item"><span className="terrain-color mountain"></span>Mountains</div>
+          <div className="terrain-item"><span className="terrain-color volcanic"></span>Volcanic</div>
+          <div className="terrain-item"><span className="terrain-color industrial"></span>Industrial</div>
+          <div className="terrain-item"><span className="terrain-color urban"></span>Urban</div>
+          <div className="terrain-item"><span className="terrain-color docks"></span>Docks</div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -540,6 +468,8 @@ export function WorldMap() {
   const { state } = useGame();
   const { assignWorker } = useGameActions();
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
+
+  const { tilemap } = state;
 
   // Count workers per district
   const workersPerDistrict = useMemo(() => {
@@ -565,6 +495,10 @@ export function WorldMap() {
     m.status === 'preparing' || m.status === 'in_progress'
   );
 
+  // Calculate map dimensions
+  const mapWidth = tilemap.width * TILE_SIZE;
+  const mapHeight = tilemap.height * TILE_SIZE;
+
   return (
     <div className="world-map-container">
       <div className="map-header">
@@ -588,141 +522,71 @@ export function WorldMap() {
       </div>
 
       <div className="map-content">
-        <svg
-          viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-          className="world-map-svg"
-          preserveAspectRatio="xMidYMid meet"
+        <div
+          className="tilemap-container"
+          style={{
+            width: mapWidth,
+            height: mapHeight,
+          }}
         >
-          {/* SVG Definitions for gradients and patterns */}
-          <defs>
-            {/* Terrain gradients */}
-            <radialGradient id="terrain-volcanic" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ff4500" />
-              <stop offset="100%" stopColor="#8b0000" />
-            </radialGradient>
-            <radialGradient id="terrain-industrial" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b4513" />
-              <stop offset="100%" stopColor="#4a4a4a" />
-            </radialGradient>
-            <radialGradient id="terrain-urban" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b4513" />
-              <stop offset="100%" stopColor="#2d1515" />
-            </radialGradient>
-            <radialGradient id="terrain-docks" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#4682b4" />
-              <stop offset="100%" stopColor="#1a3a3a" />
-            </radialGradient>
-            <radialGradient id="terrain-wasteland" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#a0522d" />
-              <stop offset="100%" stopColor="#3d2b1f" />
-            </radialGradient>
+          {/* Render all tiles */}
+          <div className="tilemap-layer tiles-layer">
+            {tilemap.tiles.map((row, y) =>
+              row.map((tile, x) => (
+                <TileRenderer
+                  key={`${x}-${y}`}
+                  tile={tile}
+                  x={x}
+                  y={y}
+                  isDistrictTile={!!tile.districtId}
+                  isHQTile={!!tile.isHQ}
+                />
+              ))
+            )}
+          </div>
 
-            {/* HQ gradient */}
-            <linearGradient id="hq-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ffd700" />
-              <stop offset="100%" stopColor="#8b4513" />
-            </linearGradient>
-
-            {/* Background pattern - hellfire */}
-            <pattern id="hellfire-pattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-              <rect width="100" height="100" fill="#0d0505" />
-              <circle cx="25" cy="25" r="20" fill="#1a0808" opacity="0.5" />
-              <circle cx="75" cy="75" r="15" fill="#1a0808" opacity="0.3" />
-              <circle cx="50" cy="50" r="10" fill="#2d1010" opacity="0.4" />
-            </pattern>
-
-            {/* River Styx pattern */}
-            <linearGradient id="styx-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1a1a2e" />
-              <stop offset="50%" stopColor="#16213e" />
-              <stop offset="100%" stopColor="#1a1a2e" />
-            </linearGradient>
-
-            {/* Glow filter */}
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Background */}
-          <rect
-            x="0"
-            y="0"
-            width={MAP_WIDTH}
-            height={MAP_HEIGHT}
-            fill="url(#hellfire-pattern)"
-          />
-
-          {/* Atmospheric effects - distant flames */}
-          <g className="background-flames" opacity="0.3">
-            <ellipse cx="150" cy="600" rx="100" ry="50" fill="#8b0000" />
-            <ellipse cx="850" cy="150" rx="80" ry="40" fill="#8b0000" />
-            <ellipse cx="500" cy="680" rx="120" ry="30" fill="#8b0000" />
-          </g>
-
-          {/* River Styx - winding through the map */}
-          <path
-            d="M 0 400 Q 200 350, 350 450 T 600 400 T 850 500 T 1000 450"
-            fill="none"
-            stroke="url(#styx-gradient)"
-            strokeWidth="40"
-            opacity="0.6"
-            className="river-styx"
-          />
-          <path
-            d="M 0 400 Q 200 350, 350 450 T 600 400 T 850 500 T 1000 450"
-            fill="none"
-            stroke="#0a0a1a"
-            strokeWidth="30"
-            opacity="0.8"
-          />
-
-          {/* Mountain ranges */}
-          <g className="mountains" opacity="0.4">
-            <polygon points="0,100 100,0 200,100" fill="#2d1515" />
-            <polygon points="150,100 250,20 350,100" fill="#3d2020" />
-            <polygon points="800,150 900,50 1000,150" fill="#2d1515" />
-            <polygon points="850,200 950,100 1000,200" fill="#3d2020" />
-          </g>
-
-          {/* Mission paths - render behind districts */}
-          <g className="mission-paths">
+          {/* Mission paths layer */}
+          <div className="tilemap-layer paths-layer">
             {activeMissions.map(mission => {
-              const targetDistrict = state.districts.find(d => d.id === mission.districtId);
-              if (!targetDistrict) return null;
+              const districtPosition = tilemap.districtPositions.get(mission.districtId);
+              if (!districtPosition) return null;
               return (
                 <MissionPath
                   key={mission.id}
                   mission={mission}
-                  targetDistrict={targetDistrict}
+                  hqPosition={tilemap.hqPosition}
+                  districtPosition={districtPosition}
                 />
               );
             })}
-          </g>
+          </div>
 
-          {/* HQ */}
-          <HQNode />
+          {/* HQ layer */}
+          <div className="tilemap-layer entities-layer">
+            <HQNode position={tilemap.hqPosition} />
+          </div>
 
-          {/* District nodes */}
-          <g className="district-nodes">
-            {state.districts.map(district => (
-              <DistrictNode
-                key={district.id}
-                district={district}
-                isSelected={district.id === selectedDistrictId}
-                onSelect={() => setSelectedDistrictId(
-                  district.id === selectedDistrictId ? null : district.id
-                )}
-                workersAssigned={workersPerDistrict[district.id] || 0}
-                activeMissions={missionsByDistrict[district.id] || []}
-              />
-            ))}
-          </g>
-        </svg>
+          {/* Districts layer */}
+          <div className="tilemap-layer districts-layer">
+            {state.districts.map(district => {
+              const position = tilemap.districtPositions.get(district.id);
+              if (!position) return null;
+              return (
+                <DistrictNode
+                  key={district.id}
+                  district={district}
+                  isSelected={district.id === selectedDistrictId}
+                  onSelect={() => setSelectedDistrictId(
+                    district.id === selectedDistrictId ? null : district.id
+                  )}
+                  workersAssigned={workersPerDistrict[district.id] || 0}
+                  activeMissions={missionsByDistrict[district.id] || []}
+                  position={position}
+                />
+              );
+            })}
+          </div>
+        </div>
 
         {/* Legend overlay */}
         <MapLegend />
