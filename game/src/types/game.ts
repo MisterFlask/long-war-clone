@@ -66,6 +66,20 @@ export interface Mission {
   preparationWeeks: number;  // 1-5+ weeks
   weeksRemaining: number;
   status: MissionStatus;
+  // From opportunity (if accepted from pool)
+  difficultyBonus?: number;  // Additional difficulty modifier from opportunity
+  rewardBonus?: number;      // Reward multiplier from opportunity (default 1.0)
+}
+
+// Mission opportunity - available missions that appear each week with expiry
+export interface MissionOpportunity {
+  id: string;
+  type: MissionType;
+  districtId: string;
+  weeksUntilExpiry: number;  // Countdown until this mission disappears
+  difficultyBonus: number;   // Additional difficulty modifier (-2 to +3)
+  rewardBonus: number;       // Multiplier for rewards (0.8 to 1.5)
+  flavorText: string;        // Description of why this opportunity exists
 }
 
 // Game phase in the weekly cycle
@@ -122,6 +136,9 @@ export interface GameState {
 
   // Missions
   missions: Mission[];
+
+  // Available mission opportunities (rotating pool)
+  availableMissions: MissionOpportunity[];
 
   // Time tracking
   currentWeek: number;
@@ -353,6 +370,45 @@ export function getDistrictTemplate(name: string): DistrictTemplate | undefined 
 
 // Company HQ position (center-left of the map, near the River Styx)
 export const HQ_POSITION: MapCoordinates = { x: 45, y: 45 };
+
+// Mission opportunity flavor texts by type
+export const MISSION_FLAVOR_TEXTS: Record<MissionType, string[]> = {
+  extraction_run: [
+    'A cache of materials has been left unguarded in the district.',
+    'Infernal shipments are passing through with minimal escort.',
+    'Warehouse security has been compromised by internal disputes.',
+    'A rival faction has abandoned their storage facility.',
+    'Storm damage has exposed valuable stockpiles.',
+  ],
+  sabotage: [
+    'A key infernal installation is vulnerable to attack.',
+    'Internal political turmoil has weakened district defenses.',
+    'A demon lord\'s lieutenant is away, leaving operations exposed.',
+    'Critical infrastructure is undergoing maintenance.',
+    'Guard rotations have been disrupted by bureaucratic feuding.',
+  ],
+  interdiction: [
+    'Demonic patrol routes have become predictable.',
+    'A supply convoy is scheduled to pass through.',
+    'Informants report reduced security presence.',
+    'Inter-demon rivalries have created enforcement gaps.',
+    'A scheduled inspection has drawn guards elsewhere.',
+  ],
+  smuggling: [
+    'A buyer in the mortal realm is desperate for hellish goods.',
+    'Border checkpoints are understaffed this week.',
+    'A corrupt official is willing to look the other way.',
+    'Trade festivals have created convenient cover.',
+    'Competing smugglers have been eliminated, opening routes.',
+  ],
+  tribute_delivery: [
+    'A minor demon is willing to accept tribute for protection.',
+    'Local powers are open to negotiation.',
+    'A well-placed bribe could smooth over recent incidents.',
+    'An intermediary has offered to facilitate peace offerings.',
+    'Political shifts have made certain officials receptive to gifts.',
+  ],
+};
 
 // Agent name pools
 export const AGENT_FIRST_NAMES = [

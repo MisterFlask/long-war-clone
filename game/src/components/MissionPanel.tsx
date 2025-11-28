@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useGame, useGameActions } from '../context/GameContext';
-import type { MissionType, Agent } from '../types/game';
+import type { MissionOpportunity, Agent } from '../types/game';
 import { MISSION_CONFIGS } from '../types/game';
-import { getAvailableAgents, calculateMissionSuccess } from '../services/gameLogic';
+import { getAvailableAgents, calculateOpportunitySuccess, calculateMissionSuccess } from '../services/gameLogic';
 import { Tooltip, TooltipContent } from './Tooltip';
 import './MissionPanel.css';
 
 // Detailed mission type descriptions for tooltips
-const MISSION_TOOLTIP_DATA: Record<MissionType, { title: string; description: string; details: string[]; warning?: string }> = {
+const MISSION_TOOLTIP_DATA: Record<string, { title: string; description: string; details: string[]; warning?: string }> = {
   extraction_run: {
     title: 'Extraction Run',
     description: 'A coordinated operation to extract valuable materials from Hell\'s depths.',
@@ -62,61 +62,60 @@ const MISSION_TOOLTIP_DATA: Record<MissionType, { title: string; description: st
   },
 };
 
-interface MissionCreatorProps {
+interface MissionAcceptorProps {
+  opportunity: MissionOpportunity;
   onClose: () => void;
 }
 
-function MissionCreator({ onClose }: MissionCreatorProps) {
+function MissionAcceptor({ opportunity, onClose }: MissionAcceptorProps) {
   const { state } = useGame();
-  const { createMission } = useGameActions();
+  const { acceptMission } = useGameActions();
 
-  const [selectedType, setSelectedType] = useState<MissionType | null>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [prepWeeks, setPrepWeeks] = useState(2);
 
   const availableAgents = getAvailableAgents(state);
-  const missionTypes = Object.values(MISSION_CONFIGS);
-  const selectedConfig = selectedType ? MISSION_CONFIGS[selectedType] : null;
+  const config = MISSION_CONFIGS[opportunity.type];
+  const district = state.districts.find((d) => d.id === opportunity.districtId);
 
-  const canCreate =
-    selectedType &&
-    selectedDistrict &&
-    selectedAgents.length >= (selectedConfig?.minAgents || 1) &&
-    selectedAgents.length <= (selectedConfig?.maxAgents || 4);
+  const canAccept =
+    selectedAgents.length >= config.minAgents &&
+    selectedAgents.length <= config.maxAgents;
 
   const toggleAgent = (agentId: string) => {
     if (selectedAgents.includes(agentId)) {
       setSelectedAgents(selectedAgents.filter((id) => id !== agentId));
     } else {
-      const maxAgents = selectedConfig?.maxAgents || 4;
-      if (selectedAgents.length < maxAgents) {
+      if (selectedAgents.length < config.maxAgents) {
         setSelectedAgents([...selectedAgents, agentId]);
       }
     }
   };
 
-  const handleCreate = () => {
-    if (selectedType && selectedDistrict && canCreate) {
-      createMission(selectedType, selectedDistrict, selectedAgents, prepWeeks);
+  const handleAccept = () => {
+    if (canAccept) {
+      acceptMission(opportunity.id, selectedAgents, prepWeeks);
       onClose();
     }
   };
 
-  // Calculate estimated success if we have all required selections
-  let estimatedSuccess = 0;
-  if (selectedType && selectedDistrict && selectedAgents.length > 0) {
-    const mockMission = {
-      id: 'preview',
-      type: selectedType,
-      districtId: selectedDistrict,
-      assignedAgents: selectedAgents,
-      preparationWeeks: prepWeeks,
-      weeksRemaining: prepWeeks,
-      status: 'preparing' as const,
-    };
-    estimatedSuccess = calculateMissionSuccess(state, mockMission);
-  }
+  // Calculate estimated success
+  const estimatedSuccess = selectedAgents.length > 0
+    ? calculateOpportunitySuccess(state, opportunity, selectedAgents, prepWeeks)
+    : 0;
+
+  // Format difficulty and reward modifiers
+  const difficultyLabel = opportunity.difficultyBonus > 0
+    ? `+${opportunity.difficultyBonus} (harder)`
+    : opportunity.difficultyBonus < 0
+    ? `${opportunity.difficultyBonus} (easier)`
+    : '±0 (standard)';
+
+  const rewardLabel = opportunity.rewardBonus >= 1.2
+    ? `${Math.round(opportunity.rewardBonus * 100)}% (bonus!)`
+    : opportunity.rewardBonus <= 0.9
+    ? `${Math.round(opportunity.rewardBonus * 100)}% (reduced)`
+    : `${Math.round(opportunity.rewardBonus * 100)}%`;
 
   return (
     <div className="mission-creator-overlay">
@@ -125,25 +124,25 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           <Tooltip
             content={
               <TooltipContent
-                title="Plan New Mission"
-                description="Create a covert operation using your agents. Missions take time to prepare but offer powerful effects."
+                title={`Accept: ${config.name}`}
+                description={opportunity.flavorText}
                 details={[
-                  'Select mission type, target district, and agents',
-                  'More preparation time increases success chance',
-                  'Agents are unavailable during missions',
-                  'Failed missions may injure or corrupt agents'
+                  `Target: ${district?.name || 'Unknown'}`,
+                  `Expires in: ${opportunity.weeksUntilExpiry} week${opportunity.weeksUntilExpiry > 1 ? 's' : ''}`,
+                  `Difficulty modifier: ${difficultyLabel}`,
+                  `Reward modifier: ${rewardLabel}`
                 ]}
               />
             }
             position="bottom"
           >
-            <h3>Plan New Mission</h3>
+            <h3>Accept Mission</h3>
           </Tooltip>
           <Tooltip
             content={
               <TooltipContent
                 title="Cancel"
-                description="Close this window without creating a mission."
+                description="Close this window without accepting the mission."
               />
             }
             position="left"
@@ -154,111 +153,22 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           </Tooltip>
         </div>
 
-        <div className="creator-section">
-          <Tooltip
-            content={
-              <TooltipContent
-                title="Mission Type"
-                description="Choose the type of operation. Each type has different difficulty, rewards, and Notice risk."
-                details={[
-                  'Extraction Run: Gather materials (low risk)',
-                  'Smuggling: Quick profit (low risk)',
-                  'Interdiction: Reduce Authority (-1)',
-                  'Sabotage: Major Authority reduction (-2, high risk)',
-                  'Tribute Delivery: Reduce Notice (costs 50 Sov)'
-                ]}
-              />
-            }
-            position="right"
-          >
-            <h4>Mission Type</h4>
-          </Tooltip>
-          <div className="mission-type-grid">
-            {missionTypes.map((config) => {
-              const tooltipData = MISSION_TOOLTIP_DATA[config.type];
-              return (
-                <Tooltip
-                  key={config.type}
-                  content={
-                    <TooltipContent
-                      title={tooltipData.title}
-                      description={tooltipData.description}
-                      details={tooltipData.details}
-                      cost={config.cost?.sovereigns ? `${config.cost.sovereigns} Sovereigns` : undefined}
-                      warning={tooltipData.warning}
-                    />
-                  }
-                  position="top"
-                >
-                  <button
-                    className={`mission-type-button ${selectedType === config.type ? 'selected' : ''}`}
-                    onClick={() => setSelectedType(config.type)}
-                  >
-                    <span className="type-name">{config.name}</span>
-                    <span className="type-desc">{config.description}</span>
-                    {config.cost?.sovereigns && (
-                      <span className="type-cost">-{config.cost.sovereigns} Sov</span>
-                    )}
-                  </button>
-                </Tooltip>
-              );
-            })}
+        <div className="opportunity-details">
+          <div className="opp-header">
+            <span className="opp-type">{config.name}</span>
+            <span className="opp-district">in {district?.name}</span>
           </div>
-        </div>
-
-        <div className="creator-section">
-          <Tooltip
-            content={
-              <TooltipContent
-                title="Target District"
-                description="Select where this mission will take place. District conditions affect mission difficulty."
-                details={[
-                  'Higher Authority = harder missions',
-                  'Revealed districts show their stats',
-                  'Consider Notice levels before operating',
-                  'Some missions affect district stats on success'
-                ]}
-              />
-            }
-            position="right"
-          >
-            <h4>Target District</h4>
-          </Tooltip>
-          <div className="district-select-grid">
-            {state.districts.map((district) => (
-              <Tooltip
-                key={district.id}
-                content={
-                  <TooltipContent
-                    title={district.name}
-                    description={district.description}
-                    details={
-                      district.revealed
-                        ? [
-                            `Authority: ${district.infernalAuthority}/10 (affects difficulty)`,
-                            `Dominion: ${district.companyDominion}/10`,
-                            `Notice: ${district.notice}/10`
-                          ]
-                        : ['Stats not revealed - use Espionage first']
-                    }
-                    warning={district.revealed && district.notice >= 7 ? 'High Notice - operations here are risky!' : undefined}
-                  />
-                }
-                position="top"
-              >
-                <button
-                  className={`district-select-button ${selectedDistrict === district.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedDistrict(district.id)}
-                >
-                  <span className="dist-name">{district.name}</span>
-                  {district.revealed && (
-                    <span className="dist-stats">
-                      Auth: {district.infernalAuthority} | Dom: {district.companyDominion}
-                    </span>
-                  )}
-                </button>
-              </Tooltip>
-            ))}
+          <p className="opp-flavor">{opportunity.flavorText}</p>
+          <div className="opp-modifiers">
+            <span className={`opp-difficulty ${opportunity.difficultyBonus > 0 ? 'hard' : opportunity.difficultyBonus < 0 ? 'easy' : ''}`}>
+              Difficulty: {difficultyLabel}
+            </span>
+            <span className={`opp-reward ${opportunity.rewardBonus >= 1.2 ? 'bonus' : opportunity.rewardBonus <= 0.9 ? 'reduced' : ''}`}>
+              Rewards: {rewardLabel}
+            </span>
+            <span className="opp-expiry">
+              Expires: {opportunity.weeksUntilExpiry} week{opportunity.weeksUntilExpiry > 1 ? 's' : ''}
+            </span>
           </div>
         </div>
 
@@ -281,11 +191,9 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           >
             <h4>
               Assign Agents
-              {selectedConfig && (
-                <span className="agent-range">
-                  ({selectedConfig.minAgents}-{selectedConfig.maxAgents} required)
-                </span>
-              )}
+              <span className="agent-range">
+                ({config.minAgents}-{config.maxAgents} required)
+              </span>
             </h4>
           </Tooltip>
           <div className="agent-select-grid">
@@ -392,7 +300,7 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           </small>
         </div>
 
-        {selectedType && selectedDistrict && selectedAgents.length > 0 && (
+        {selectedAgents.length > 0 && (
           <Tooltip
             content={
               <TooltipContent
@@ -400,7 +308,7 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
                 description="Estimated outcome based on current selections."
                 details={[
                   `Success chance: ${estimatedSuccess}%`,
-                  `Notice risk: +${selectedConfig?.noticeRisk || 0} to district`,
+                  `Notice risk: +${config.noticeRisk} to district`,
                   'Actual results may vary based on random factors',
                   'Failed missions may injure agents'
                 ]}
@@ -415,7 +323,7 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
                 {estimatedSuccess}%
               </span>
               <span className="preview-notice">
-                Notice Risk: +{selectedConfig?.noticeRisk || 0}
+                Notice Risk: +{config.noticeRisk}
               </span>
             </div>
           </Tooltip>
@@ -426,7 +334,7 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
             content={
               <TooltipContent
                 title="Cancel"
-                description="Close this window without creating a mission. No resources will be spent."
+                description="Close this window without accepting the mission. The opportunity will remain available until it expires."
               />
             }
             position="top"
@@ -438,20 +346,18 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           <Tooltip
             content={
               <TooltipContent
-                title="Launch Mission"
-                description={canCreate ? "Confirm and begin mission preparation. Assigned agents will be unavailable until the mission completes." : "Complete all selections to launch the mission."}
+                title="Accept Mission"
+                description={canAccept ? "Confirm and begin mission preparation. Assigned agents will be unavailable until the mission completes." : "Select the required number of agents to accept this mission."}
                 details={
-                  canCreate
+                  canAccept
                     ? [
                         'Agents will begin preparation immediately',
                         'Mission executes after prep time completes',
-                        'Cannot cancel once started (can only abort during prep)'
+                        'This opportunity will be removed from the pool'
                       ]
                     : [
-                        !selectedType ? 'Select a mission type' : '',
-                        !selectedDistrict ? 'Select a target district' : '',
-                        selectedAgents.length < (selectedConfig?.minAgents || 1) ? `Need at least ${selectedConfig?.minAgents || 1} agent(s)` : ''
-                      ].filter(Boolean)
+                        `Need ${config.minAgents}-${config.maxAgents} agent(s)`
+                      ]
                 }
               />
             }
@@ -459,10 +365,10 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
           >
             <button
               className="create-button"
-              disabled={!canCreate}
-              onClick={handleCreate}
+              disabled={!canAccept}
+              onClick={handleAccept}
             >
-              Launch Mission
+              Accept Mission
             </button>
           </Tooltip>
         </div>
@@ -474,56 +380,135 @@ function MissionCreator({ onClose }: MissionCreatorProps) {
 export function MissionPanel() {
   const { state } = useGame();
   const { cancelMission } = useGameActions();
-  const [showCreator, setShowCreator] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<MissionOpportunity | null>(null);
 
   const activeMissions = state.missions.filter(
     (m) => m.status === 'preparing' || m.status === 'in_progress'
   );
 
+  const availableOpportunities = state.availableMissions;
+
   return (
     <div className="mission-panel">
+      {/* Available Mission Opportunities Section */}
       <div className="mission-header">
         <Tooltip
           content={
             <TooltipContent
-              title="Missions"
-              description="Covert operations executed by your agents. Missions offer powerful effects but require agent commitment and carry risk."
+              title="Available Missions"
+              description="Mission opportunities that have become available. Each has a limited time before it expires."
               details={[
-                'Missions require agent assignment and prep time',
-                'Success depends on agent levels and preparation',
-                'Failed missions may injure or corrupt agents',
-                'Completed missions provide rewards or district effects'
+                'New missions appear each week',
+                'Missions expire if not accepted in time',
+                'Difficulty and rewards vary by opportunity',
+                'Choose wisely - you have limited agents!'
               ]}
             />
           }
           position="bottom"
         >
-          <h3>Missions</h3>
+          <h3>Available Missions ({availableOpportunities.length})</h3>
         </Tooltip>
-        {state.phase === 'assignment' && (
-          <Tooltip
-            content={
-              <TooltipContent
-                title="Plan New Mission"
-                description="Open the mission planner to create a new covert operation."
-                details={[
-                  'Select mission type and target district',
-                  'Assign available agents',
-                  'Choose preparation time',
-                  'Only available during Assignment phase'
-                ]}
-              />
-            }
-            position="left"
-          >
-            <button
-              className="new-mission-button"
-              onClick={() => setShowCreator(true)}
-            >
-              + Plan Mission
-            </button>
-          </Tooltip>
-        )}
+      </div>
+
+      {availableOpportunities.length === 0 ? (
+        <Tooltip
+          content={
+            <TooltipContent
+              title="No Opportunities"
+              description="No mission opportunities are currently available. New missions will appear at the start of each week."
+              details={[
+                'Advance the week to get new opportunities',
+                'Mission variety depends on district conditions',
+                'Keep agents ready for when opportunities arise'
+              ]}
+            />
+          }
+          position="right"
+        >
+          <div className="no-missions">
+            <span>No mission opportunities available</span>
+            <small>New missions will appear next week</small>
+          </div>
+        </Tooltip>
+      ) : (
+        <div className="opportunities-list">
+          {availableOpportunities.map((opportunity) => {
+            const config = MISSION_CONFIGS[opportunity.type];
+            const district = state.districts.find((d) => d.id === opportunity.districtId);
+            const tooltipData = MISSION_TOOLTIP_DATA[opportunity.type];
+
+            const difficultyClass = opportunity.difficultyBonus > 0 ? 'hard' : opportunity.difficultyBonus < 0 ? 'easy' : 'normal';
+            const rewardClass = opportunity.rewardBonus >= 1.2 ? 'bonus' : opportunity.rewardBonus <= 0.9 ? 'reduced' : 'normal';
+            const expiryClass = opportunity.weeksUntilExpiry <= 1 ? 'urgent' : opportunity.weeksUntilExpiry <= 2 ? 'soon' : 'normal';
+
+            return (
+              <Tooltip
+                key={opportunity.id}
+                content={
+                  <TooltipContent
+                    title={`${config.name} - ${district?.name}`}
+                    description={opportunity.flavorText}
+                    details={[
+                      ...tooltipData.details,
+                      `Difficulty bonus: ${opportunity.difficultyBonus > 0 ? '+' : ''}${opportunity.difficultyBonus}`,
+                      `Reward multiplier: ${Math.round(opportunity.rewardBonus * 100)}%`,
+                      `Expires in: ${opportunity.weeksUntilExpiry} week(s)`
+                    ]}
+                    warning={opportunity.weeksUntilExpiry <= 1 ? 'Expires soon - act now!' : tooltipData.warning}
+                  />
+                }
+                position="left"
+              >
+                <div
+                  className={`opportunity-item ${expiryClass}`}
+                  onClick={() => state.phase === 'assignment' && setSelectedOpportunity(opportunity)}
+                >
+                  <div className="opp-info">
+                    <span className="opp-name">{config.name}</span>
+                    <span className="opp-district">{district?.name}</span>
+                  </div>
+                  <div className="opp-details">
+                    <span className={`opp-difficulty-badge ${difficultyClass}`}>
+                      {opportunity.difficultyBonus > 0 ? '+' : ''}{opportunity.difficultyBonus}
+                    </span>
+                    <span className={`opp-reward-badge ${rewardClass}`}>
+                      {Math.round(opportunity.rewardBonus * 100)}%
+                    </span>
+                    <span className={`opp-expiry-badge ${expiryClass}`}>
+                      {opportunity.weeksUntilExpiry}w
+                    </span>
+                  </div>
+                  {state.phase === 'assignment' && (
+                    <button className="accept-opp-button">
+                      Accept
+                    </button>
+                  )}
+                </div>
+              </Tooltip>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Active Missions Section */}
+      <div className="mission-header active-header">
+        <Tooltip
+          content={
+            <TooltipContent
+              title="Active Missions"
+              description="Missions currently in preparation or execution. Monitor their progress here."
+              details={[
+                'Preparing missions count down each week',
+                'In-progress missions resolve during the Resolution phase',
+                'Agents are unavailable until missions complete'
+              ]}
+            />
+          }
+          position="bottom"
+        >
+          <h3>Active Missions ({activeMissions.length})</h3>
+        </Tooltip>
       </div>
 
       {activeMissions.length === 0 ? (
@@ -531,12 +516,11 @@ export function MissionPanel() {
           content={
             <TooltipContent
               title="No Active Missions"
-              description="You don't have any missions in progress. Plan new missions to expand your operations."
+              description="You don't have any missions in progress. Accept available missions to put your agents to work."
               details={[
-                'Click \"+ Plan Mission\" to create one',
-                'Missions offer resources and strategic effects',
-                'Use missions to reduce Authority or Notice',
-                'Smuggling provides quick income'
+                'Select from available opportunities above',
+                'Missions help reduce Authority and gain resources',
+                'Use missions strategically to advance your goals'
               ]}
             />
           }
@@ -544,7 +528,7 @@ export function MissionPanel() {
         >
           <div className="no-missions">
             <span>No active missions</span>
-            <small>Plan missions to earn resources and sabotage Hell's authority</small>
+            <small>Accept available missions to deploy your agents</small>
           </div>
         </Tooltip>
       ) : (
@@ -571,8 +555,9 @@ export function MissionPanel() {
                       `Status: ${mission.status === 'preparing' ? `Preparing (${mission.weeksRemaining} week${mission.weeksRemaining > 1 ? 's' : ''} left)` : 'In Progress'}`,
                       `Success chance: ${successChance}%`,
                       `Agents: ${agents.map(a => a.name.split(' ')[0]).join(', ')}`,
-                      `Notice risk: +${config.noticeRisk} on completion`
-                    ]}
+                      `Notice risk: +${config.noticeRisk} on completion`,
+                      mission.rewardBonus ? `Reward multiplier: ${Math.round(mission.rewardBonus * 100)}%` : ''
+                    ].filter(Boolean)}
                   />
                 }
                 position="left"
@@ -647,7 +632,12 @@ export function MissionPanel() {
         </div>
       )}
 
-      {showCreator && <MissionCreator onClose={() => setShowCreator(false)} />}
+      {selectedOpportunity && (
+        <MissionAcceptor
+          opportunity={selectedOpportunity}
+          onClose={() => setSelectedOpportunity(null)}
+        />
+      )}
     </div>
   );
 }
